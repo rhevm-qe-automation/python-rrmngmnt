@@ -30,3 +30,7 @@ class FileSystem(Service):
         return self.host.executor().run_cmd(
             ['rm', '-rf', path]
         )[0] == 0
+
+    def is_dir_empty(self, path):
+        command = ['ls',  path]
+        return self.host.executor().run_cmd(cmd=command)

@@ -31,6 +31,7 @@ class FileSystem(Service):
             ['rm', '-rf', path]
         )[0] == 0
 
-    def is_dir_empty(self, path):
-        command = ['ls',  path]
-        return self.host.executor().run_cmd(cmd=command)
+    def listdir(self, path):
+        return self.host.executor().run_cmd(
+            ['ls', '-l',  path]
+        )[0] == 0

@@ -30,3 +30,8 @@ class FileSystem(Service):
         return self.host.executor().run_cmd(
             ['rm', '-rf', path]
         )[0] == 0
+
+    def listdir(self, path):
+        return self.host.executor().run_cmd(
+            ['ls', path]
+        )[1].split()

@@ -1,7 +1,8 @@
 import os
-import socket
-import netaddr
 import copy
+import socket
+import urllib2
+import netaddr
 from rrmngmnt.common import fqdn2ip
 from rrmngmnt.resource import Resource
 from rrmngmnt.service import Systemd, SysVinit, InitCtl
@@ -346,3 +347,41 @@ class Host(Resource):
             ret = False
 
         return ret
+
+    def download_file_from_url(self, url, f_dir):
+        """
+        Download file on the host from given url
+
+        :param url: url to file
+        :type url: str
+        :param f_dir: file directory on host
+        :type f_dir: str
+        :return: absolute path to file
+        :rtype: str
+        """
+        file_path = os.path.join(f_dir, url.split('/')[-1])
+        with self.executor().session() as host_session:
+            with host_session.open_file(file_path, 'wb') as host_file:
+                u = urllib2.urlopen(url)
+                url_meta = u.info()
+                file_size = int(url_meta.getheaders("Content-Length")[0])
+                self.logger.info(
+                    "Downloading: %s Bytes: %s", file_path, file_size
+                )
+                file_size_dl = 0
+                block_sz = 8192
+                status_counter = 0
+                buf = u.read(block_sz)
+                while buf:
+                    percent = file_size_dl * 100. / file_size
+                    status = r"%10d  [%3.2f%%] %s" % (
+                        file_size_dl, percent, chr(8) * int(percent)
+                    )
+                    status_counter += 1
+                    file_size_dl += len(buf)
+                    host_file.write(buf)
+                    buf = u.read(block_sz)
+                    if status_counter == 1000:
+                        status_counter = 0
+                        self.logger.info(status)
+        return file_path

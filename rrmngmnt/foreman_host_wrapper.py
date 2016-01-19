@@ -105,7 +105,6 @@ class ForemanHost(Host):
         """
         host_d = {
             "name": self.fqdn,
-            "mac": self.network.get_mac_address_by_ip(self.ip),
             "ip": self.ip
         }
         host_d.update(kwargs)
@@ -151,6 +150,7 @@ class ForemanHost(Host):
         """
         try:
             self.foreman_api.hosts.destroy(self.host_id)
+            self.host_id = ""
         except Exception as ex:
             raise ForemanException(
                 "Failed to remove host %s from foreman: %s" %
@@ -172,3 +172,12 @@ class ForemanHost(Host):
             )
             return ""
         return host_status_d["status"]
+
+    def is_host_exist(self):
+        """
+        Check if host exist under foreman
+
+        :return: True, if host exist, otherwise False
+        :rtype: bool
+        """
+        return True if self.host_id else False

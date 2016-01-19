@@ -350,11 +350,11 @@ class Host(Resource):
 
     def download_file_from_url(self, url, f_dir):
         """
-        Download file on the host from given url
+        Download file to the host from given url
 
-        :param url: url to file
+        :param url: file download url
         :type url: str
-        :param f_dir: file directory on host
+        :param f_dir: directory where to save the file
         :type f_dir: str
         :return: absolute path to file
         :rtype: str

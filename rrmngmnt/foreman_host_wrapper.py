@@ -86,10 +86,12 @@ class ForemanHost(Host):
         """
         self.update_host(build=True)
 
-    def add_host(self,  **kwargs):
+    def add_host(self, mac_address, **kwargs):
         """
         Add new host to foreman
 
+        :param mac_address: host mac address
+        :type mac_address: str
         :param kwargs: location_id = str
                        domain_id = str
                        organization_id = str
@@ -105,6 +107,7 @@ class ForemanHost(Host):
         """
         host_d = {
             "name": self.fqdn,
+            "mac": mac_address,
             "ip": self.ip
         }
         host_d.update(kwargs)

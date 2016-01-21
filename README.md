@@ -54,9 +54,25 @@ if h.service('httpd').is_enabled():
     h.service('httpd').disable()
 ```
 
+### Foreman Wrapper
+It allows to manage your host under the Foreman http://theforeman.org/
+```
+f_h = ForemanHost(
+    "10.11.12.13",
+    "http://test-foreman-url.test.com",
+    "test_user",
+    "test_password"
+)
+if not f_h.is_exist():
+    f_h.add(host_mac_address, **foreman_parameters)
+f_h.build()
+f_h.run_command(["reboot"])
+```
+
 ## Requires
 * paramiko
 * netaddr
+* foreman
 
 ## Install
 ```

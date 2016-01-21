@@ -80,13 +80,13 @@ class ForemanHost(Host):
         self.logger.info("Found element to use: %s", element["name"])
         return element["id"]
 
-    def build_host(self):
+    def build(self):
         """
         Build host
         """
-        self.update_host(build=True)
+        self.update(build=True)
 
-    def add_host(self, mac_address, **kwargs):
+    def add(self, mac_address, **kwargs):
         """
         Add new host to foreman
 
@@ -120,7 +120,7 @@ class ForemanHost(Host):
                 (self.fqdn, kwargs, ex)
             )
 
-    def update_host(self, **kwargs):
+    def update(self, **kwargs):
         """
         Update host in foreman
 
@@ -145,7 +145,7 @@ class ForemanHost(Host):
                 (self.host_id, kwargs, ex)
             )
 
-    def remove_host(self):
+    def remove(self):
         """
         Remove host from foreman
 
@@ -160,7 +160,7 @@ class ForemanHost(Host):
                 (self.host_id, ex)
             )
 
-    def get_host_status(self):
+    def get_status(self):
         """
         Get host status in foreman
 
@@ -176,7 +176,7 @@ class ForemanHost(Host):
             return ""
         return host_status_d["status"]
 
-    def is_host_exist(self):
+    def is_exist(self):
         """
         Check if host exist under foreman
 

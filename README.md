@@ -72,7 +72,7 @@ f_h.run_command(["reboot"])
 ## Requires
 * paramiko
 * netaddr
-* foreman
+* python-foreman
 
 ## Install
 ```

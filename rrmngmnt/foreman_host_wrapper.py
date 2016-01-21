@@ -103,7 +103,7 @@ class ForemanHost(Host):
                        build = bool
                        root_pass = str
                        managed = bool
-        :raise: HostedEngineException
+        :raise: ForemanException
         """
         host_d = {
             "name": self.fqdn,
@@ -135,7 +135,7 @@ class ForemanHost(Host):
                        hostgroup_id = str
                        root_pass = str
                        managed = bool
-        :raise: HostedEngineException
+        :raise: ForemanException
         """
         try:
             self.foreman_api.hosts.update(self.host_id, kwargs)
@@ -149,7 +149,7 @@ class ForemanHost(Host):
         """
         Remove host from foreman
 
-        :raise: HostedEngineException
+        :raise: ForemanException
         """
         try:
             self.foreman_api.hosts.destroy(self.host_id)

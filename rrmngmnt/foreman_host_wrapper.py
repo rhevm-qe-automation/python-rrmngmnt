@@ -75,7 +75,6 @@ class ForemanCollection(Resource):
     """
     Foreman collection class
     """
-
     def __init__(
         self, collection_name, foreman_url, foreman_user, foreman_password,
         api_version=2, search_attr=None
@@ -183,7 +182,7 @@ class ForemanCollection(Resource):
                 "Failed to remove element %s from foreman: %s" %
                 (element_name, ex)
             )
-    
+
     def is_exist(self, element_name):
         """
         Check if element exist under foreman collection
@@ -194,7 +193,7 @@ class ForemanCollection(Resource):
         :rtype: bool
         """
         return bool(self.get_element_id(element_name=element_name))
-    
+
     def get_status(self, element_name):
         """
         Get element status
@@ -218,7 +217,6 @@ class ForemanHost(Host):
     """
     Foreman host class
     """
-    
     def __init__(
         self, host_ip, host_root_password,
         foreman_url, foreman_user, foreman_password
@@ -245,7 +243,7 @@ class ForemanHost(Host):
             foreman_user=foreman_user,
             foreman_password=foreman_password,
         )
-    
+
     def add_to_foreman(self, **kwargs):
         """
         Add host to foreman

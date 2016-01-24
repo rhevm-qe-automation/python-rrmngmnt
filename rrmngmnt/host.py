@@ -338,7 +338,7 @@ class Host(Resource):
 
         return ret
 
-    def download_file_from_url(self, url, f_dir):
+    def download_file(self, url, f_dir):
         """
         Download file to the host from given url
 

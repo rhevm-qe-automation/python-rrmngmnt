@@ -7,6 +7,7 @@ from rrmngmnt.user import (
     ADUser,
 )
 from rrmngmnt.db import Database
+from rrmngmnt.foreman_host_wrapper import ForemanHost
 
 
 __all__ = [
@@ -17,4 +18,5 @@ __all__ = [
     InternalDomain,
     ADUser,
     Database,
+    ForemanHost,
 ]

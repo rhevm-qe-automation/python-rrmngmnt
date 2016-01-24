@@ -22,7 +22,7 @@ setup(
     platforms=['linux'],
     packages=['rrmngmnt'],
     long_description=read('README.md'),
-    install_requires=['paramiko', 'netaddr'],
+    install_requires=['paramiko', 'netaddr', 'python-foreman'],
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Topic :: Utilities",

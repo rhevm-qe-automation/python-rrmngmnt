@@ -65,5 +65,5 @@ class FileSystem(Service):
         :rtype: str
         """
         cmd = ["python", "-c", "print open('{0}').read()".format(path)]
-        rc, out, err = self.host.run_command(cmd)
+        rc, out, _ = self.host.run_command(cmd)
         return out if not rc else ""

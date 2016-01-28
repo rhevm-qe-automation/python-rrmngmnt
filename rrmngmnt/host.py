@@ -348,7 +348,7 @@ class Host(Resource):
 
         return ret
 
-    def download_file(self, url, f_dir):
+    def download_file(self, url, f_dir, force=False):
         """
         Download file to the host from given url
 
@@ -356,32 +356,35 @@ class Host(Resource):
         :type url: str
         :param f_dir: directory where to save the file
         :type f_dir: str
+        :param force: override file
+        :type force: bool
         :return: absolute path to file
         :rtype: str
         """
         file_path = os.path.join(f_dir, url.split('/')[-1])
-        with self.executor().session() as host_session:
-            with host_session.open_file(file_path, 'wb') as host_file:
-                u = urllib2.urlopen(url)
-                url_meta = u.info()
-                file_size = int(url_meta.getheaders("Content-Length")[0])
-                self.logger.info(
-                    "Downloading: %s Bytes: %s", file_path, file_size
-                )
-                file_size_dl = 0
-                block_sz = 8192
-                status_counter = 0
-                buf = u.read(block_sz)
-                while buf:
-                    percent = file_size_dl * 100. / file_size
-                    status = r"%10d  [%3.2f%%] %s" % (
-                        file_size_dl, percent, chr(8) * int(percent)
+        if not self.fs.exists(file_path) or force:
+            with self.executor().session() as host_session:
+                with host_session.open_file(file_path, 'wb') as host_file:
+                    u = urllib2.urlopen(url)
+                    url_meta = u.info()
+                    file_size = int(url_meta.getheaders("Content-Length")[0])
+                    self.logger.info(
+                        "Downloading: %s Bytes: %s", file_path, file_size
                     )
-                    status_counter += 1
-                    file_size_dl += len(buf)
-                    host_file.write(buf)
+                    file_size_dl = 0
+                    block_sz = 8192
+                    status_counter = 0
                     buf = u.read(block_sz)
-                    if status_counter == 1000:
-                        status_counter = 0
-                        self.logger.info(status)
+                    while buf:
+                        percent = file_size_dl * 100. / file_size
+                        status = r"%10d  [%3.2f%%] %s" % (
+                            file_size_dl, percent, chr(8) * int(percent)
+                        )
+                        status_counter += 1
+                        file_size_dl += len(buf)
+                        host_file.write(buf)
+                        buf = u.read(block_sz)
+                        if status_counter == 1000:
+                            status_counter = 0
+                            self.logger.info(status)
         return file_path

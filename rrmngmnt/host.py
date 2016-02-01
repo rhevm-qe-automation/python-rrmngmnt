@@ -406,7 +406,6 @@ class Host(Resource):
         except paramiko.SSHException as e:
             self.logger.debug("SSH exception: %s", e)
         for positive in (False, True):
-            print "SSH statues %s" % positive
             if not self.wait_for_ssh_connective_state(positive=positive):
                 return False
         return True

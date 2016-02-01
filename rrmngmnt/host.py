@@ -363,7 +363,7 @@ class Host(Resource):
             self.logger.debug("Socket error: %s", e)
         except paramiko.SSHException as e:
             self.logger.debug("SSH exception: %s", e)
-        self.logger.warning("Host %s not connective via ssh", self.fqdn)
+        self.logger.warning("Host %s does not connective via ssh", self.fqdn)
         return False
 
     def wait_for_ssh_connective_state(

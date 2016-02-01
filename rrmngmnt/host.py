@@ -1,7 +1,9 @@
 import os
+import copy
+import time
 import socket
 import netaddr
-import copy
+import paramiko
 from rrmngmnt.common import fqdn2ip
 from rrmngmnt.resource import Resource
 from rrmngmnt.service import Systemd, SysVinit, InitCtl
@@ -10,6 +12,9 @@ from rrmngmnt.filesystem import FileSystem
 from rrmngmnt.package_manager import PackageManagerProxy
 from rrmngmnt import ssh
 from rrmngmnt.storage import NFSService, LVMService
+
+REBOOT_TIMEOUT = 600
+REBOOT_SAMPLE_TIME = 20
 
 
 class Host(Resource):
@@ -112,17 +117,30 @@ class Host(Resource):
             user = copy.copy(self.root_user)
         return ssh.RemoteExecutor(user, self.ip, use_pkey=pkey)
 
-    def run_command(self, command):
+    def run_command(
+        self, command, input_=None, tcp_timeout=None, io_timeout=None
+    ):
         """
         Run command on host
 
         :param command: command to run
         :type command: list
+        :param input_: input data
+        :type input_: str
+        :param tcp_timeout: tcp timeout
+        :type tcp_timeout: float
+        :param io_timeout: timeout for data operation (read/write)
+        :type io_timeout: float
         :return: tuple of (rc, out, err)
         :rtype: tuple
         """
         self.logger.info("Executing command %s", ' '.join(command))
-        rc, out, err = self.executor().run_cmd(command)
+        rc, out, err = self.executor().run_cmd(
+            cmd=command,
+            input_=input_,
+            tcp_timeout=tcp_timeout,
+            io_timeout=io_timeout
+        )
         if rc:
             self.logger.error(
                 "Failed to run command %s ERR: %s OUT: %s", command, err, out
@@ -335,14 +353,60 @@ class Host(Resource):
         :return: True if host is connective, False otherwise
         :rtype: bool
         """
-        ret = False
         try:
-            self.executor().run_cmd(['true'], tcp_timeout=tcp_timeout)
-            ret = True
-        except (socket.error, socket.timeout):
-            ret = False
-        except Exception:
-            self.logger.warning("Unexpected exception", exc_info=True)
-            ret = False
+            self.logger.info(
+                "Check if host %s is connective via ssh", self.fqdn
+            )
+            self.run_command(['true'], tcp_timeout=tcp_timeout)
+            return True
+        except (socket.timeout, socket.error) as e:
+            self.logger.debug("Socket error: %s", e)
+        except paramiko.SSHException as e:
+            self.logger.debug("SSH exception: %s", e)
+        self.logger.warning("Host %s not connective via ssh", self.fqdn)
+        return False
 
-        return ret
+    def wait_for_ssh_connective_state(
+        self, positive, timeout=REBOOT_TIMEOUT, sample_time=REBOOT_SAMPLE_TIME
+    ):
+        """
+        Wait until host will be connective or not connective via ssh
+
+        :param positive: wait for the positive or negative connective state
+        :type positive: bool
+        :param timeout: wait timeout
+        :type timeout: int
+        :param sample_time: sample the ssh each sample_time seconds
+        :type sample_time: int
+        :return: True, if positive and ssh is connective or
+        negative and ssh does not connective, otherwise False
+        :rtype: bool
+        """
+        reachable = "unreachable" if positive else "reachable"
+        timeout_counter = 0
+        while self.is_connective() != positive:
+            if timeout_counter > timeout:
+                self.logger.error(
+                    "Host %s is still %s via ssh, after %s seconds",
+                    self.fqdn, reachable, timeout
+                )
+                return False
+            time.sleep(sample_time)
+            timeout_counter += sample_time
+        return True
+
+    def reboot(self):
+        """
+        Reboot host and wait until host will be connective via ssh
+        """
+        try:
+            self.run_command(["reboot"])
+        except socket.timeout as e:
+            self.logger.debug("Socket timeout: %s", e)
+        except paramiko.SSHException as e:
+            self.logger.debug("SSH exception: %s", e)
+        for positive in (False, True):
+            print "SSH statues %s" % positive
+            if not self.wait_for_ssh_connective_state(positive=positive):
+                return False
+        return True

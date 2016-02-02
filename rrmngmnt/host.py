@@ -13,8 +13,8 @@ from rrmngmnt.package_manager import PackageManagerProxy
 from rrmngmnt import ssh
 from rrmngmnt.storage import NFSService, LVMService
 
-REBOOT_TIMEOUT = 600
-REBOOT_SAMPLE_TIME = 20
+SSH_CONNECTIVITY_TIMEOUT = 600
+SSH_CONNECTIVITY_SAMPLE_TIME = 20
 
 
 class Host(Resource):
@@ -363,11 +363,13 @@ class Host(Resource):
             self.logger.debug("Socket error: %s", e)
         except paramiko.SSHException as e:
             self.logger.debug("SSH exception: %s", e)
-        self.logger.warning("Host %s does not connective via ssh", self.fqdn)
+        self.logger.error("Host %s does not connective via ssh", self.fqdn)
         return False
 
     def wait_for_ssh_connective_state(
-        self, positive, timeout=REBOOT_TIMEOUT, sample_time=REBOOT_SAMPLE_TIME
+        self, positive,
+        timeout=SSH_CONNECTIVITY_TIMEOUT,
+        sample_time=SSH_CONNECTIVITY_SAMPLE_TIME
     ):
         """
         Wait until host will be connective or not connective via ssh

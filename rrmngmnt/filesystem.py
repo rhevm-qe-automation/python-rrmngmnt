@@ -89,3 +89,48 @@ class FileSystem(Service):
                 raise errors.CommandExecutionFailure(
                     executor, cmd, rc, err,
                 )
+
+    def mkdir(self, path):
+        """
+        Create directory on host
+
+        :param path: directory path
+        :type path: str
+        :return: True, if action succeed, otherwise False
+        :rtype: bool
+        """
+        return self.host.run_command(
+            ['mkdir', path]
+        )[0] == 0
+
+    def chown(self, path, username, groupname):
+        """
+        Change owner of file or directory
+
+        :param path: file or directory path
+        :type path: str
+        :param username: change user owner to username
+        :type username: str
+        :param groupname: change group owner to groupname
+        :type groupname: str
+        :return: True, if action succeed, otherwise False
+        :rtype: bool
+        """
+        return self.host.run_command(
+            ['chown', '%s:%s' % (username, groupname), path]
+        )[0] == 0
+
+    def chmod(self, path, mode):
+        """
+        Change permission of directory or file
+
+        :param path: file or directory path
+        :type path: str
+        :param mode: permission mode(600 for example or u+x)
+        :type mode: str
+        :return: True, if action succeed, otherwise False
+        :rtype: bool
+        """
+        return self.host.run_command(
+            ['chmod', mode, path]
+        )[0] == 0

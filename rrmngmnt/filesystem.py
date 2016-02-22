@@ -127,3 +127,37 @@ class FileSystem(Service):
         :raises: CommandExecutionFailure, if chmod failed
         """
         self._exec_command(['chmod', mode, path])
+
+    def wget(self, url, f_dir):
+            """
+            Download file on the host from given url
+
+            :param url: url to file
+            :type url: str
+            :param f_dir: file directory on host
+            :type f_dir: str
+            :return: absolute path to file
+            :rtype: str
+            """
+            rc = None
+            file_path = os.path.join(f_dir, url.split('/')[-1])
+            with self.host.executor().session() as vds_session:
+                wget_command = vds_session.command(
+                    ['wget', '-O', file_path, url]
+                )
+                with wget_command.execute() as (_, _, stderr):
+                    counter = 0
+                    wait_progress = False
+                    while rc is None:
+                        line = stderr.readline()
+                        if counter == 1000 or not wait_progress:
+                            counter = 0
+                            self.logger.info(line)
+                        if 'Saving to' in line:
+                            wait_progress = True
+                        counter += 1
+                        rc = wget_command.get_rc()
+            if rc:
+                self.logger.error('Failed to download file from url %s', url)
+                return ''
+            return file_path

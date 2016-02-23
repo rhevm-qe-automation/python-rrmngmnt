@@ -140,11 +140,11 @@ class FileSystem(Service):
             :rtype: str
             """
             rc = None
+            host_executor = self.host.executor()
             file_path = os.path.join(f_dir, url.split('/')[-1])
-            with self.host.executor().session() as vds_session:
-                wget_command = vds_session.command(
-                    ['wget', '-O', file_path, url]
-                )
+            cmd = ['wget', '-O', file_path, url]
+            with host_executor.session() as vds_session:
+                wget_command = vds_session.command(cmd)
                 with wget_command.execute() as (_, _, stderr):
                     counter = 0
                     wait_progress = False
@@ -158,6 +158,8 @@ class FileSystem(Service):
                         counter += 1
                         rc = wget_command.get_rc()
             if rc:
-                self.logger.error('Failed to download file from url %s', url)
-                return ''
+                raise errors.CommandExecutionFailure(
+                    host_executor, cmd, rc,
+                    "Failed to download file from url {0}".format(url)
+                )
             return file_path

@@ -128,23 +128,22 @@ class FileSystem(Service):
         """
         self._exec_command(['chmod', mode, path])
 
-    def wget(self, url, f_dir):
+    def wget(self, url, output_file):
             """
             Download file on the host from given url
 
             :param url: url to file
             :type url: str
-            :param f_dir: file directory on host
-            :type f_dir: str
+            :param output_file: full path to output file
+            :type output_file: str
             :return: absolute path to file
             :rtype: str
             """
             rc = None
             host_executor = self.host.executor()
-            file_path = os.path.join(f_dir, url.split('/')[-1])
-            cmd = ['wget', '-O', file_path, url]
-            with host_executor.session() as vds_session:
-                wget_command = vds_session.command(cmd)
+            cmd = ['wget', '-O', output_file, '--no-check-certificate', url]
+            with host_executor.session() as host_session:
+                wget_command = host_session.command(cmd)
                 with wget_command.execute() as (_, _, stderr):
                     counter = 0
                     wait_progress = False
@@ -162,4 +161,4 @@ class FileSystem(Service):
                     host_executor, cmd, rc,
                     "Failed to download file from url {0}".format(url)
                 )
-            return file_path
+            return output_file

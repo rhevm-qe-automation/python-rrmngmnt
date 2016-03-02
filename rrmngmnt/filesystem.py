@@ -149,12 +149,14 @@ class FileSystem(Service):
                 with wget_command.execute() as (_, _, stderr):
                     counter = 0
                     while rc is None:
-                        if show_progress:
-                            line = stderr.readline()
-                            if counter == 1000:
-                                counter = 0
-                                self.logger.info("Progress: %s", line)
-                            counter += 1
+                        line = stderr.readline()
+                        if counter == 1000:
+                            counter = 0
+                            self.logger.debug(
+                                "Progress: %s", line,
+                                extra={'show_progress_bar': show_progress}
+                            )
+                        counter += 1
                         rc = wget_command.get_rc()
             if rc:
                 raise errors.CommandExecutionFailure(

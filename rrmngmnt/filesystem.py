@@ -128,7 +128,7 @@ class FileSystem(Service):
         """
         self._exec_command(['chmod', mode, path])
 
-    def wget(self, url, output_file):
+    def wget(self, url, output_file, show_progress=False):
             """
             Download file on the host from given url
 
@@ -136,25 +136,25 @@ class FileSystem(Service):
             :type url: str
             :param output_file: full path to output file
             :type output_file: str
+            :param show_progress: show progress bar
+            :type show_progress: bool
             :return: absolute path to file
             :rtype: str
             """
             rc = None
             host_executor = self.host.executor()
-            cmd = ['wget', '-O', output_file, '--no-check-certificate', url]
+            cmd = ["wget", "-O", output_file, "--no-check-certificate", url]
             with host_executor.session() as host_session:
                 wget_command = host_session.command(cmd)
                 with wget_command.execute() as (_, _, stderr):
                     counter = 0
-                    wait_progress = False
                     while rc is None:
-                        line = stderr.readline()
-                        if counter == 1000 or not wait_progress:
-                            counter = 0
-                            self.logger.info(line)
-                        if 'Saving to' in line:
-                            wait_progress = True
-                        counter += 1
+                        if show_progress:
+                            line = stderr.readline()
+                            if counter == 1000:
+                                counter = 0
+                                self.logger.info("Progress: %s", line)
+                            counter += 1
                         rc = wget_command.get_rc()
             if rc:
                 raise errors.CommandExecutionFailure(

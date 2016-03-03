@@ -22,7 +22,6 @@ class Resource(object):
             show_progress_bar = hasattr(record, 'show_progress_bar')
             if show_progress_bar:
                 super(Resource.ProgressHandler, self).emit(record)
-                sys.stdout.flush()
 
     def __init__(self):
         super(Resource, self).__init__()

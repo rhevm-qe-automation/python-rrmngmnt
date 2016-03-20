@@ -1,4 +1,3 @@
-import sys
 import logging
 
 
@@ -14,22 +13,13 @@ class Resource(object):
             """
             self.warning(*args, **kwargs)
 
-    class ProgressHandler(logging.StreamHandler):
-        """
-        Handle progress bar output and show it under sys.stdout
-        """
-        def emit(self, record):
-            show_progress_bar = hasattr(record, 'show_progress_bar')
-            if show_progress_bar:
-                super(Resource.ProgressHandler, self).emit(record)
-
     def __init__(self):
         super(Resource, self).__init__()
         logger = logging.getLogger(self.__class__.__name__)
-        ph = self.ProgressHandler(sys.stdout)
-        ph.setLevel(logging.DEBUG)
-        logger.addHandler(ph)
         self._logger_adapter = self.LoggerAdapter(logger, {'self': self})
+
+    def logger_handler(self, status):
+        self._logger_adapter.info("Status: %s", status)
 
     @property
     def logger(self):

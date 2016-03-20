@@ -128,7 +128,7 @@ class FileSystem(Service):
         """
         self._exec_command(['chmod', mode, path])
 
-    def wget(self, url, output_file, show_progress=False):
+    def wget(self, url, output_file, progress_handler=None):
             """
             Download file on the host from given url
 
@@ -136,8 +136,8 @@ class FileSystem(Service):
             :type url: str
             :param output_file: full path to output file
             :type output_file: str
-            :param show_progress: show progress bar
-            :type show_progress: bool
+            :param progress_handler: progress handler function
+            :type progress_handler: func
             :return: absolute path to file
             :rtype: str
             """
@@ -150,12 +150,9 @@ class FileSystem(Service):
                     counter = 0
                     while rc is None:
                         line = stderr.readline()
-                        if counter == 1000:
+                        if counter == 1000 and progress_handler:
+                            progress_handler(line)
                             counter = 0
-                            self.logger.debug(
-                                "Progress: %s", line,
-                                extra={'show_progress_bar': show_progress}
-                            )
                         counter += 1
                         rc = wget_command.get_rc()
             if rc:

@@ -18,9 +18,6 @@ class Resource(object):
         logger = logging.getLogger(self.__class__.__name__)
         self._logger_adapter = self.LoggerAdapter(logger, {'self': self})
 
-    def logger_handler(self, status):
-        self._logger_adapter.info("Status: %s", status)
-
     @property
     def logger(self):
         return self._logger_adapter

@@ -586,28 +586,27 @@ class Network(Service):
         rc, _, _ = self.host.run_command(shlex.split(cmd))
         return not bool(rc)
 
-    def is_connective(self, ping_timeout=20.0, ipv6=False):
+    def is_connective(self, ping_timeout=20.0):
         """
         Check if host network is connective via ping command
 
         :param ping_timeout: time to wait for response
         :type ping_timeout: float
-        :param ipv6: if address IPV6
-        :type ipv6: bool
         :return: True if address is connective via ping command,
             False otherwise
         :rtype: bool
         """
         host_address = self.host.ip
-        ping_cmd = 'ping6' if ipv6 else 'ping'
+        # Leave it for future support of IPV6
+        ping_cmd = "ping6" if netaddr.valid_ipv6(self.host.ip) else "ping"
         self.logger.info(
             "Check if address is connective via ping in given timeout %s",
             ping_timeout
         )
         command = [
             ping_cmd,
-            '-c', '1',
-            '-w', str(ping_timeout),
+            "-c", "1",
+            "-w", str(ping_timeout),
             host_address
         ]
         p = subprocess.Popen(

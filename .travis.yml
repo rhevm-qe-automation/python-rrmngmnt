@@ -7,7 +7,3 @@ install:
     - pip install tox
 script:
     - tox
-addons:
-  apt:
-    packages:
-    - inetutils-ping

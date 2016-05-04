@@ -207,6 +207,10 @@ class TestNetwork(object):
     def if_down(self):
         assert get_host().network.if_down("interface")
 
+    def test_network_connectivity(self):
+        h = Host("127.0.0.1")
+        assert h.network.is_connective()
+
 
 class TestHostNameCtl(object):
 

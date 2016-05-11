@@ -10,11 +10,12 @@ class FileSystem(Service):
     """
     def _exec_command(self, cmd):
         host_executor = self.host.executor()
-        rc, _, err = host_executor.run_cmd(cmd)
+        rc, out, err = host_executor.run_cmd(cmd)
         if rc:
             raise errors.CommandExecutionFailure(
                 cmd=cmd, executor=host_executor, rc=rc, err=err
             )
+        return out
 
     def _exec_file_test(self, op, path):
         return self.host.executor().run_cmd(
@@ -161,3 +162,59 @@ class FileSystem(Service):
                 "Failed to download file from url {0}".format(url)
             )
         return output_file
+
+    def get_file_permissions(self, file_path):
+        """
+        Get file permissions
+
+        :param file_path: absolute path to file
+        :type file_path: str
+        :return: file permission in octal form(example 644)
+        :rtype: str
+        """
+        cmd = ["stat", "-c", "\"%a\"", file_path]
+        return self._exec_command(cmd=cmd)
+
+    def get_file_owner(self, file_path):
+        """
+        Get file user and group owner
+
+        :param file_path: absolute path to file
+        :type file_path: str
+        :return: file user and group owner names(example ['root', 'root'])
+        :rtype: list
+        """
+        cmd = ["stat", "-c", "\"%U %G\"", file_path]
+        return self._exec_command(cmd=cmd).split()
+
+    def is_user_exist(self, user_name):
+        """
+        Check if user exist on system
+
+        :param user_name: user name
+        :type user_name: str
+        :return: True, if user exist, otherwise False
+        :rtype: bool
+        """
+        try:
+            cmd = ["id", "-u", user_name]
+            self._exec_command(cmd=cmd)
+        except errors.CommandExecutionFailure:
+            return False
+        return True
+
+    def is_group_exist(self, group_name):
+        """"
+        Check if group exist on system
+
+        :param group_name: group name
+        :type group_name: str
+        :return: True, if group exist, otherwise False
+        :rtype: bool
+        """
+        try:
+            cmd = ["id", "-g", group_name]
+            self._exec_command(cmd=cmd)
+        except errors.CommandExecutionFailure:
+            return False
+        return True

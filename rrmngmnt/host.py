@@ -252,11 +252,26 @@ class Host(Resource):
         :param dst: path to destination
         :type dst: str
         """
+        file_permissions = resource.fs.get_file_permissions(file_path=src)
+        file_owner_user, file_owner_group = resource.fs.get_file_owner(
+            file_path=src
+        )
         with resource.executor().session() as resource_session:
             with self.executor().session() as host_session:
                 with resource_session.open_file(src, 'rb') as resource_file:
                     with host_session.open_file(dst, 'wb') as host_file:
                         host_file.write(resource_file.read())
+        self.fs.chmod(path=dst, mode=file_permissions)
+        if (
+            self.fs.is_user_exist(user_name=file_owner_user) or
+            self.fs.is_group_exist(group_name=file_owner_group)
+        ):
+            if self.fs.is_user_exist(user_name=file_owner_user):
+                self.fs.chown(path=dst, username=file_owner_user, groupname="")
+            if self.fs.is_group_exist(group_name=file_owner_group):
+                self.fs.chown(
+                    path=dst, username="", groupname=file_owner_group
+                )
 
     def _create_service(self, name, timeout):
         for provider in self.default_service_providers:

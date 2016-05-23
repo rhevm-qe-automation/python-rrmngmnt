@@ -197,12 +197,26 @@ class TestFileStats(object):
         'stat -c %s /tmp/test' %
         ','.join(["%s=%s" % (k, v[0]) for k, v in type_map.items()]): (
             0,
-            'st_mode=0x81a4,st_gid=0,st_uid=0',
+            (
+                'st_ctime=0,'
+                'st_rdev=0,'
+                'st_blocks=1480,'
+                'st_nlink=1,'
+                'st_gid=0,'
+                'st_dev=2051,'
+                'st_ino=11804680,'
+                'st_mode=0x81a4,'
+                'st_mtime=1463487739,'
+                'st_blksize=4096,'
+                'st_size=751764,'
+                'st_uid=0,'
+                'st_atime=1463487196'
+            ),
             ''
         ),
         'stat -c "%U %G" /tmp/test': (
             0,
-            ('root', 'root'),
+            'root root',
             ''
         ),
         'id -u root': (

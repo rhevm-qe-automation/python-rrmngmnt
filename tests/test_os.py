@@ -175,3 +175,143 @@ class TestOsReleaseCorrupted(object):
         info = self.get_host().os.release_info
         assert 'VERSION_ID' not in info
         assert len(info) == 4
+
+
+class TestFileStats(object):
+    type_map = {
+        'st_mode': ('0x%f', lambda x: int(x, 16)),
+        'st_ino': ('%i', int),
+        'st_dev': ('%d', int),
+        'st_nlink': ('%h', int),
+        'st_uid': ('%u', int),
+        'st_gid': ('%g', int),
+        'st_size': ('%s', int),
+        'st_atime': ('%X', int),
+        'st_mtime': ('%Y', int),
+        'st_ctime': ('%W', int),
+        'st_blocks': ('%b', int),
+        'st_blksize': ('%o', int),
+        'st_rdev': ('%t', int),
+    }
+    data = {
+        'stat -c %s /tmp/test' %
+        ','.join(["%s=%s" % (k, v[0]) for k, v in type_map.items()]): (
+            0,
+            'st_mode=0x81a4,st_gid=0,st_uid=0',
+            ''
+        ),
+        'stat -c "%U %G" /tmp/test': (
+            0,
+            ('root', 'root'),
+            ''
+        ),
+        'id -u root': (
+            0,
+            '',
+            ''
+        ),
+        'id -g root': (
+            0,
+            '',
+            ''
+        )
+    }
+    files = {}
+
+    @classmethod
+    def setup_class(cls):
+        fake_cmd_data(cls.data, cls.files)
+
+    def get_host(self, ip='1.1.1.1'):
+        return Host(ip)
+
+    def test_get_file_stats(self):
+        file_stats = self.get_host().os.get_file_stats('/tmp/test')
+        assert (
+            file_stats.st_mode == 33188 and
+            file_stats.st_uid == 0 and
+            file_stats.st_gid == 0
+        )
+
+    def test_get_file_owner(self):
+        file_user, file_group = self.get_host().os.get_file_owner('/tmp/test')
+        assert file_user == 'root' and file_group == 'root'
+
+    def test_get_file_permissions(self):
+        assert self.get_host().os.get_file_permissions('/tmp/test') == '0644'
+
+    def test_is_user_exist(self):
+        assert self.get_host().os.is_user_exist('root')
+
+    def test_is_group_exist(self):
+        assert self.get_host().os.is_group_exist('root')
+
+
+class TestFileStatsNegative(object):
+    type_map = {
+        'st_mode': ('0x%f', lambda x: int(x, 16)),
+        'st_ino': ('%i', int),
+        'st_dev': ('%d', int),
+        'st_nlink': ('%h', int),
+        'st_uid': ('%u', int),
+        'st_gid': ('%g', int),
+        'st_size': ('%s', int),
+        'st_atime': ('%X', int),
+        'st_mtime': ('%Y', int),
+        'st_ctime': ('%W', int),
+        'st_blocks': ('%b', int),
+        'st_blksize': ('%o', int),
+        'st_rdev': ('%t', int),
+    }
+    data = {
+        'stat -c %s /tmp/negative_test' %
+        ','.join(["%s=%s" % (k, v[0]) for k, v in type_map.items()]): (
+            1,
+            '',
+            'cannot stat ‘/tmp/negative_test’: No such file or directory'
+        ),
+        'stat -c "%U %G" /tmp/negative_test': (
+            1,
+            '',
+            'cannot stat ‘/tmp/negative_test’: No such file or directory'
+        ),
+        'id -u test': (
+            1,
+            '',
+            ''
+        ),
+        'id -g test': (
+            1,
+            '',
+            ''
+        )
+    }
+    files = {}
+
+    @classmethod
+    def setup_class(cls):
+        fake_cmd_data(cls.data, cls.files)
+
+    def get_host(self, ip='1.1.1.1'):
+        return Host(ip)
+
+    def test_get_file_stats(self):
+        with pytest.raises(errors.CommandExecutionFailure) as ex_info:
+            self.get_host().os.get_file_stats('/tmp/negative_test')
+        assert "No such file" in str(ex_info.value)
+
+    def test_get_file_owner(self):
+        with pytest.raises(errors.CommandExecutionFailure) as ex_info:
+            self.get_host().os.get_file_owner('/tmp/negative_test')
+        assert "No such file" in str(ex_info.value)
+
+    def test_get_file_permissions(self):
+        with pytest.raises(errors.CommandExecutionFailure) as ex_info:
+            self.get_host().os.get_file_permissions('/tmp/negative_test')
+        assert "No such file" in str(ex_info.value)
+
+    def test_is_user_exist(self):
+        assert not self.get_host().os.is_user_exist('test')
+
+    def test_is_group_exist(self):
+        assert not self.get_host().os.is_group_exist('test')

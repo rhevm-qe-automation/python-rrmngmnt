@@ -3,23 +3,24 @@ This module define resource Host which is entry point to various services.
 It should hold methods / properties which returns you Instance of specific
 Service hosted on that Host.
 """
-import os
 import copy
+import os
 import socket
-import netaddr
 import warnings
 
-from rrmngmnt import ssh
+import netaddr
+
 from rrmngmnt import errors
 from rrmngmnt import power_manager
+from rrmngmnt import ssh
 from rrmngmnt.common import fqdn2ip
-from rrmngmnt.network import Network
-from rrmngmnt.storage import NFSService, LVMService
-from rrmngmnt.service import Systemd, SysVinit, InitCtl
-from rrmngmnt.resource import Resource
 from rrmngmnt.filesystem import FileSystem
-from rrmngmnt.package_manager import PackageManagerProxy
+from rrmngmnt.network import Network
 from rrmngmnt.operatingsystem import OperatingSystem
+from rrmngmnt.package_manager import PackageManagerProxy
+from rrmngmnt.resource import Resource
+from rrmngmnt.service import Systemd, SysVinit, InitCtl
+from rrmngmnt.storage import NFSService, LVMService
 
 
 class Host(Resource):
@@ -252,9 +253,9 @@ class Host(Resource):
         :param dst: path to destination
         :type dst: str
         """
-        file_permissions = resource.fs.get_file_permissions(file_path=src)
-        file_owner_user, file_owner_group = resource.fs.get_file_owner(
-            file_path=src
+        file_permissions = resource.os.get_file_permissions(path=src)
+        file_owner_user, file_owner_group = resource.os.get_file_owner(
+            path=src
         )
         with resource.executor().session() as resource_session:
             with self.executor().session() as host_session:
@@ -263,12 +264,12 @@ class Host(Resource):
                         host_file.write(resource_file.read())
         self.fs.chmod(path=dst, mode=file_permissions)
         if (
-            self.fs.is_user_exist(user_name=file_owner_user) or
-            self.fs.is_group_exist(group_name=file_owner_group)
+            self.os.is_user_exist(user_name=file_owner_user) or
+            self.os.is_group_exist(group_name=file_owner_group)
         ):
-            if self.fs.is_user_exist(user_name=file_owner_user):
+            if self.os.is_user_exist(user_name=file_owner_user):
                 self.fs.chown(path=dst, username=file_owner_user, groupname="")
-            if self.fs.is_group_exist(group_name=file_owner_group):
+            if self.os.is_group_exist(group_name=file_owner_group):
                 self.fs.chown(
                     path=dst, username="", groupname=file_owner_group
                 )

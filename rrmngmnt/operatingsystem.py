@@ -143,7 +143,7 @@ class OperatingSystem(Service):
             ",".join(["%s=%s" % (k, v[0]) for k, v in type_map.items()]),
             path
         ]
-        out = self._exec_command(cmd=cmd)
+        out = self._exec_command(cmd=cmd).decode('utf-8')
         out = out.strip().split(',')
 
         data = {}

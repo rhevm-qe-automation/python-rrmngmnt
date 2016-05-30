@@ -221,9 +221,9 @@ class TestFileStats(object):
             'root root',
             ''
         ),
-        'stat -c "%a" /tmp/test': (
+        'stat -c %a /tmp/test': (
             0,
-            '644',
+            '644\n',
             ''
         ),
         'id -u root': (
@@ -281,7 +281,7 @@ class TestFileStatsNegative(object):
             '',
             'cannot stat ‘/tmp/negative_test’: No such file or directory'
         ),
-        'stat -c "%a" /tmp/negative_test': (
+        'stat -c %a /tmp/negative_test': (
             1,
             '',
             'cannot stat ‘/tmp/negative_test’: No such file or directory'

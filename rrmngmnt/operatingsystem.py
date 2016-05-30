@@ -111,7 +111,7 @@ class OperatingSystem(Service):
             self._dist = self.get_distribution()
         return self._dist
 
-    def get_file_stats(self, path):
+    def stat(self, path):
         """
         Get file or directory stats
 
@@ -161,7 +161,8 @@ class OperatingSystem(Service):
         :return: file permission in octal form(example 0644)
         :rtype: str
         """
-        return oct(self.get_file_stats(path=path).st_mode)[3:]
+        cmd = ["stat", "-c", "%a", path]
+        return self._exec_command(cmd=cmd)
 
     def get_file_owner(self, path):
         """
@@ -173,7 +174,7 @@ class OperatingSystem(Service):
         cmd = ["stat", "-c", "%U %G", path]
         return self._exec_command(cmd=cmd).split()
 
-    def is_user_exist(self, user_name):
+    def user_exists(self, user_name):
         """
         Check if user exist on system
 
@@ -189,7 +190,7 @@ class OperatingSystem(Service):
             return False
         return True
 
-    def is_group_exist(self, group_name):
+    def group_exists(self, group_name):
         """"
         Check if group exist on system
 

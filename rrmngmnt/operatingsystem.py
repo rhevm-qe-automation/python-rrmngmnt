@@ -162,7 +162,7 @@ class OperatingSystem(Service):
         :rtype: str
         """
         cmd = ["stat", "-c", "%a", path]
-        return self._exec_command(cmd=cmd)
+        return self._exec_command(cmd=cmd).decode('utf-8').strip()
 
     def get_file_owner(self, path):
         """
@@ -172,7 +172,7 @@ class OperatingSystem(Service):
         :rtype: list
         """
         cmd = ["stat", "-c", "%U %G", path]
-        return self._exec_command(cmd=cmd).split()
+        return self._exec_command(cmd=cmd).decode('utf-8').split()
 
     def user_exists(self, user_name):
         """

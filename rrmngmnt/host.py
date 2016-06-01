@@ -264,12 +264,12 @@ class Host(Resource):
                         host_file.write(resource_file.read())
         self.fs.chmod(path=dst, mode=file_permissions)
         if (
-            self.os.is_user_exist(user_name=file_owner_user) or
-            self.os.is_group_exist(group_name=file_owner_group)
+            self.os.user_exists(user_name=file_owner_user) or
+            self.os.group_exists(group_name=file_owner_group)
         ):
-            if self.os.is_user_exist(user_name=file_owner_user):
+            if self.os.user_exists(user_name=file_owner_user):
                 self.fs.chown(path=dst, username=file_owner_user, groupname="")
-            if self.os.is_group_exist(group_name=file_owner_group):
+            if self.os.group_exists(group_name=file_owner_group):
                 self.fs.chown(
                     path=dst, username="", groupname=file_owner_group
                 )

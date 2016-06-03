@@ -59,7 +59,9 @@ class Host(Resource):
         :type service_provider: class which implement SystemService interface
         """
         super(Host, self).__init__()
+        self.host_fqdn = None
         if not netaddr.valid_ipv4(ip):
+            self.host_fqdn = ip
             ip = fqdn2ip(ip)
         self.ip = ip
         self.users = list()
@@ -102,7 +104,7 @@ class Host(Resource):
 
     @property
     def fqdn(self):
-        return socket.getfqdn(self.ip)
+        return socket.getfqdn(self.ip) if not self.host_fqdn else self.host_fqdn
 
     def add_power_manager(self, pm_type, **init_params):
         """

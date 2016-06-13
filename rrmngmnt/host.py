@@ -242,7 +242,7 @@ class Host(Resource):
             )
         return rc, out, err
 
-    def copy_to(self, resource, src, dst):
+    def copy_to(self, resource, src, dst, mode=None, ownership=None):
         """
         Copy to host from another resource
 
@@ -252,27 +252,20 @@ class Host(Resource):
         :type src: str
         :param dst: path to destination
         :type dst: str
+        :param mode: file permissions
+        :type mode: str
+        :param ownership: file ownership(ex. ('root', 'root'))
+        :type ownership: tuple
         """
-        file_permissions = resource.os.get_file_permissions(path=src)
-        file_owner_user, file_owner_group = resource.os.get_file_owner(
-            path=src
-        )
         with resource.executor().session() as resource_session:
             with self.executor().session() as host_session:
                 with resource_session.open_file(src, 'rb') as resource_file:
                     with host_session.open_file(dst, 'wb') as host_file:
                         host_file.write(resource_file.read())
-        self.fs.chmod(path=dst, mode=file_permissions)
-        if (
-            self.os.user_exists(user_name=file_owner_user) or
-            self.os.group_exists(group_name=file_owner_group)
-        ):
-            if self.os.user_exists(user_name=file_owner_user):
-                self.fs.chown(path=dst, username=file_owner_user, groupname="")
-            if self.os.group_exists(group_name=file_owner_group):
-                self.fs.chown(
-                    path=dst, username="", groupname=file_owner_group
-                )
+        if mode:
+            self.fs.chmod(path=dst, mode=mode)
+        if ownership:
+            self.fs.chown(path=dst, *ownership)
 
     def _create_service(self, name, timeout):
         for provider in self.default_service_providers:

@@ -265,7 +265,7 @@ class Host(Resource):
         if mode:
             self.fs.chmod(path=dst, mode=mode)
         if ownership:
-            self.fs.chown(path=dst, *ownership)
+            self.fs.chown(dst, *ownership)
 
     def _create_service(self, name, timeout):
         for provider in self.default_service_providers:

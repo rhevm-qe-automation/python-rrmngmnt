@@ -200,6 +200,36 @@ class FileSystem(Service):
         """
         self._exec_command(['chmod', mode, path])
 
+    def get_owner_user(self, path):
+        """
+        Get owner's username.
+
+        Args:
+            path (str): file or directory path.
+
+        Raises:
+            CommandExecutionFailure: if stat failed.
+
+        Returns:
+            str: owner's username or empty string;
+        """
+        return self._exec_command(['stat', '-c', '%U', path])
+
+    def get_owner_group(self, path):
+        """
+        Get owner's group.
+
+        Args:
+            path (str): file or directory path.
+
+        Raises:
+            CommandExecutionFailure: if stat failed.
+
+        Returns:
+            str: owner's group or empty string;
+        """
+        return self._exec_command(['stat', '-c', '%G', path])
+
     def get(self, path_src, path_dst):
         """
         Fetch file from Host and store on local system

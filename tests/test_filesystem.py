@@ -64,6 +64,10 @@ class TestFilesystem(object):
         ),
         'truncate -s 0 /tmp/file_to_flush': (0, '', ''),
         'mv /tmp/source /tmp/destination': (0, '', ''),
+        'stat -c %U /tmp/ownership': (0, 'user', ''),
+        'stat -c %G /tmp/ownership': (0, 'group', ''),
+        'stat -c %U /tmp/nonexist': (1, '', ''),
+        'stat -c %G /tmp/nonexist': (1, '', ''),
     }
     files = {}
 
@@ -145,6 +149,22 @@ class TestFilesystem(object):
         with pytest.raises(errors.CommandExecutionFailure) as ex_info:
             self.get_host().fs.chmod('/tmp/nofile', '600')
         assert "No such file or directory" in str(ex_info.value)
+
+    def test_get_owner_user_negative(self):
+        with pytest.raises(errors.CommandExecutionFailure) as ex_info:
+            self.get_host().fs.get_owner_user("/tmp/nonexist")
+        assert '' in str(ex_info.value)
+
+    def test_get_owner_group_negative(self):
+        with pytest.raises(errors.CommandExecutionFailure) as ex_info:
+            self.get_host().fs.get_owner_group("/tmp/nonexist")
+        assert '' in str(ex_info.value)
+
+    def test_get_owner_user_positive(self):
+        assert self.get_host().fs.get_owner_user("/tmp/ownership") == "user"
+
+    def test_get_owner_group_positive(self):
+        assert self.get_host().fs.get_owner_group("/tmp/ownership") == "group"
 
     def test_touch_positive(self):
         assert self.get_host().fs.touch('/path/to/file', '/path/to/file1')

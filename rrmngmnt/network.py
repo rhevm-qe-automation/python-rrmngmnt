@@ -683,3 +683,22 @@ class Network(Service):
             )
             return False
         return True
+
+    def get_interface_speed(self, interface):
+        """
+        Get network interface speed
+
+        Args:
+            interface (str): Interface name
+
+        Returns:
+            str: Interface speed or empty string in case of failure
+        """
+        rc, out, _ = self._cmd(
+            ["cat", "/sys/class/net/{iface}/speed".format(iface=interface)]
+        )
+        if bool(rc):
+            self.logger.error(
+                "Unable to get interface: %s speed value", interface
+            )
+        return out

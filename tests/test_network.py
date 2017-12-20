@@ -190,6 +190,8 @@ class TestNetwork(object):
         ),
         'ip link set up interface': True,
         'ip link set down interface': True,
+        "cat /sys/class/net/eth0/speed": (0, "1000", ""),
+        "cat /sys/class/net/not_exist/speed": (1, "", "")
     }
     files = {
     }

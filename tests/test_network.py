@@ -263,10 +263,6 @@ class TestNetwork(object):
     def if_down(self):
         assert get_host().network.if_down("interface")
 
-    def test_get_interface_speed(self):
-        assert get_host().network.get_interface_speed("eth0") == "1000"
-        assert not get_host().network.get_interface_speed("not_exist")
-
 
 class TestHostNameCtl(object):
 

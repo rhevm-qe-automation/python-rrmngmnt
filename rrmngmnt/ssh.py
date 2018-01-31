@@ -185,8 +185,8 @@ class RemoteExecutor(Executor):
                 if self._err is not None:
                     self._err.close()
                 self.logger.debug("Results of command: %s", self.cmd)
-                self.logger.debug("  OUT: %s", self.out)
-                self.logger.debug("  ERR: %s", self.err)
+                self.logger.debug("  OUT: %s", unicode(self.out,'utf8'))
+                self.logger.debug("  ERR: %s", unicode(self.err, 'utf8'))
                 self.logger.debug("  RC: %s", self.rc)
 
         def run(self, input_, timeout=None, get_pty=False):

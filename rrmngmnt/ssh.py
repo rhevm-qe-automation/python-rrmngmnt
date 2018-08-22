@@ -115,6 +115,17 @@ class RemoteExecutor(Executor):
             ex.args = (message,)
             ex._updated = True
 
+        def get_transport(self, timeout=None):
+            if timeout is not None and timeout != self._timeout:
+                self.close()
+            transport = self._ssh.get_transport()
+            if transport is None:
+                self.close()
+                self.open()
+                transport = self._ssh.get_transport()
+            transport.set_keepalive(60)
+            return transport
+
         def command(self, cmd):
             return RemoteExecutor.Command(cmd, self)
 

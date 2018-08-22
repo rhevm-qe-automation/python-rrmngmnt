@@ -59,6 +59,7 @@ class TestFilesystem(object):
         ),
         'truncate -s 0 /tmp/file_to_flush': (0, '', ''),
         'mv /tmp/source /tmp/destination': (0, '', ''),
+        'cp /tmp/source /tmp/destination': (0, '', '')
     }
     files = {}
 
@@ -113,6 +114,9 @@ class TestFilesystem(object):
 
     def test_move(self):
         assert self.get_host().fs.move("/tmp/source", "/tmp/destination")
+
+    def test_copy(self):
+        assert self.get_host().fs.copy("/tmp/source", "/tmp/destination")
 
     def test_flush_file(self):
         assert self.get_host().fs.flush_file("/tmp/file_to_flush")

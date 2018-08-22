@@ -134,6 +134,21 @@ class FileSystem(Service):
         cmd = ["mv", source_path, destination_path]
         return self.host.run_command(cmd)[0] == 0
 
+    def copy(self, source_path, destination_path, *args):
+        """
+        Copy a file or directory from source to destination.
+
+        Args:
+            source_path (str): The source path to copy from.
+            destination_path (str): The destination path to copy to.
+            args (list): 'cp' options (i.e, '-r' for recursive copy)
+
+        Returns:
+            bool: True if there were no errors, False otherwise.
+        """
+        cmd = ["cp", list(args), source_path, destination_path]
+        return self.host.run_command(cmd)[0] == 0
+
     def create_file(self, content, path):
         """
         Create file with given content on filesystem.

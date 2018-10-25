@@ -190,8 +190,7 @@ class Network(Service):
             list of strings: List of interfaces
         """
         out = self._cmd(
-            "ls -la /sys/class/net | grep 'dummy_\|pci' | grep -o '["
-            "^/]*$'".split()
+            r"ls -la /sys/class/net | grep 'dummy_\|pci' | grep -o '[""^/]*$'".split()
         )
         out = out.strip().splitlines()
         out.sort(key=lambda x: 'dummy_' in x)
@@ -396,9 +395,9 @@ class Network(Service):
         bridges = []
         cmd = [
             'brctl', 'show', '|',
-            'sed', '-e', '/^bridge name/ d',  # remove header
+            'sed', '-e', r'/^bridge name/ d',  # remove header
             # deal with multiple interfaces
-            '-e', "'s/^\s\s*\(\S\S*\)$/CONT:\\1/I'"
+            '-e', r"'s/^\s\s*\(\S\S*\)$/CONT:\\1/I'"
         ]
         out = self._cmd(cmd).strip()
         if not out:

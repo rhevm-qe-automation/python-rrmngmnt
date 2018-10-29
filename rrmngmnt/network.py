@@ -190,7 +190,8 @@ class Network(Service):
             list of strings: List of interfaces
         """
         out = self._cmd(
-            r"ls -la /sys/class/net | grep 'dummy_\|pci' | grep -o '[""^/]*$'".split()
+            "ls -la /sys/class/net | grep 'dummy_\\|pci' | grep -o '["
+            "^/]*$'".split()
         )
         out = out.strip().splitlines()
         out.sort(key=lambda x: 'dummy_' in x)
@@ -397,7 +398,11 @@ class Network(Service):
             'brctl', 'show', '|',
             'sed', '-e', r'/^bridge name/ d',  # remove header
             # deal with multiple interfaces
+<<<<<<< HEAD
             '-e', r"'s/^\s\s*\(\S\S*\)$/CONT:\\1/I'"
+=======
+            '-e', "'s/^\\s\\s*\\(\\S\\S*\\)$/CONT:\\1/I'"
+>>>>>>> Fixed the following PEP errors by converting the string
         ]
         out = self._cmd(cmd).strip()
         if not out:

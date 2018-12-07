@@ -190,7 +190,7 @@ class Network(Service):
             list of strings: List of interfaces
         """
         out = self._cmd(
-            "ls -la /sys/class/net | grep 'dummy_\|pci' | grep -o '["
+            "ls -la /sys/class/net | grep 'dummy_\\|pci' | grep -o '["
             "^/]*$'".split()
         )
         out = out.strip().splitlines()
@@ -398,7 +398,7 @@ class Network(Service):
             'brctl', 'show', '|',
             'sed', '-e', '/^bridge name/ d',  # remove header
             # deal with multiple interfaces
-            '-e', "'s/^\s\s*\(\S\S*\)$/CONT:\\1/I'"
+            '-e', "'s/^\\s\\s*\\(\\S\\S*\\)$/CONT:\\1/I'"
         ]
         out = self._cmd(cmd).strip()
         if not out:
@@ -545,7 +545,7 @@ class Network(Service):
             return False
         return True
 
-    def send_icmp(self, dst, count="5", size="1500", extra_args=None):
+    def send_icmp(self, dst, count="5", size=None, extra_args=None):
         """
         Send ICMP to destination IP/FQDN
 
@@ -558,10 +558,10 @@ class Network(Service):
         Returns:
             bool: True/false
         """
-        cmd = ["ping", dst, "-c", count, "-s", size]
-        if size != "1500":
-            cmd.extend(["-M", "do"])
-        if extra_args is not None:
+        cmd = ["ping", dst, "-c", count]
+        if size:
+            cmd.extend(["-s", size, "-M", "do"])
+        if extra_args:
             for ar in extra_args.split():
                 cmd.extend(ar.split())
         try:

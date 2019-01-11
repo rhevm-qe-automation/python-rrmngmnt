@@ -40,6 +40,10 @@ class Database(Service):
             raise Exception(
                 "Failed to exec sql command: %s" % err
             )
+        # from PG10 could print output to err even when rc = 0
+        # eg. 'Did not find any relations.' for \dt command
+        if not out and err:
+            out = err
         return [
             a.strip().split('|') for a in out.strip().split(separator)
             if a.strip()

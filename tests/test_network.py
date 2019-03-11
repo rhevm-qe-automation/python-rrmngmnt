@@ -272,10 +272,10 @@ class TestNetwork(object):
         assert get_host().network.send_icmp('1.2.3.4', size="10")
 
     def test_add_ip_with_bitmask(self):
-        assert get_host().add_ip(nic="eth0", ip="1.2.3.4", mask="24")
+        assert get_host().network.add_ip(nic="eth0", ip="1.2.3.4", mask="24")
 
     def test_add_ip_with_subnet_mask(self):
-        assert get_host().add_ip(
+        assert get_host().network.add_ip(
             nic="eth0", ip="1.2.3.4", mask="255.255.255.0"
         )
 

@@ -669,8 +669,7 @@ class Network(Service):
         cmd = "ip address add {ip}/{mask} dev {nic}".format(
             ip=ip, mask=mask, nic=nic
         )
-        rc, _, _ = self.host.run_command(command=shlex.split(cmd))
-        return not bool(rc)
+        return not bool(self.host.run_command(command=shlex.split(cmd))[0])
 
     def is_connective(self, ping_timeout=20.0):
         """

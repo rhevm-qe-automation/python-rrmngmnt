@@ -662,6 +662,9 @@ class Network(Service):
             nic (str): Interface name
             ip (str): IP address to add
             mask (str): IP netmask
+
+        Returns:
+            bool: True if add IP was success, False otherwise
         """
         cmd = "ip address add {ip}/{mask} dev {nic}".format(
             ip=ip, mask=mask, nic=nic

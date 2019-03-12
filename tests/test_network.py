@@ -189,8 +189,8 @@ class TestNetwork(object):
         "cat /sys/class/net/eth0/speed": (0, "1000", ""),
         "cat /sys/class/net/eth0/operstate": (0, "up", ""),
         "ping 1.2.3.4 -c 5 -s 10 -M do": (0, "something", ""),
-        "ip address add 1.2.3.4/24 dev eth0": True,
-        "ip address add 1.2.3.4/255.255.255.0 dev eth0": True,
+        'ip address add 1.2.3.4/24 dev eth0': (0, "", ""),
+        'ip address add 1.2.3.4/255.255.255.0 dev eth0': (0, "", ""),
     }
     files = {
     }

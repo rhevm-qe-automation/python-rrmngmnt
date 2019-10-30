@@ -122,7 +122,7 @@ class RemoteExecutor(Executor):
         def run_cmd(self, cmd, input_=None, timeout=None, follow_output=False):
             cmd = self.command(cmd)
             return (
-                cmd.run_real_time(timeout) if follow_output 
+                cmd.run_real_time(timeout) if follow_output
                 else cmd.run(input_, timeout)
             )
 
@@ -163,7 +163,9 @@ class RemoteExecutor(Executor):
             return self._rc
 
         @contextlib.contextmanager
-        def execute(self, bufsize=-1, timeout=None, get_pty=False, log_result=True):
+        def execute(
+            self, bufsize=-1, timeout=None, get_pty=False, log_result=True
+        ):
             """
             This method allows you to work directly with streams.
 
@@ -207,11 +209,11 @@ class RemoteExecutor(Executor):
                 self.out = normalize_string(out.read())
                 self.err = normalize_string(err.read())
             return self.rc, self.out, self.err
-        
+
         def run_real_time(self, timeout=None, get_pty=False):
             """
             This function executes command and continuously (line by line) logs
-            its output on debug level. 
+            its output on debug level.
             """
             with self.execute(
                 timeout=timeout, get_pty=get_pty, log_result=False
@@ -249,7 +251,10 @@ class RemoteExecutor(Executor):
         """
         return RemoteExecutor.Session(self, timeout)
 
-    def run_cmd(self, cmd, input_=None, tcp_timeout=None, io_timeout=None, follow_output=False):
+    def run_cmd(
+        self, cmd, input_=None, tcp_timeout=None,
+        io_timeout=None, follow_output=False
+    ):
         """
         Args:
             tcp_timeout (float): Tcp timeout
@@ -262,7 +267,7 @@ class RemoteExecutor(Executor):
             tuple (int, str, str): Rc, out, err
         """
         with self.session(tcp_timeout) as session:
-                return session.run_cmd(cmd, input_, io_timeout, follow_output)
+            return session.run_cmd(cmd, input_, io_timeout, follow_output)
 
     def is_connective(self, tcp_timeout=20.0):
         """
@@ -327,17 +332,17 @@ class PlaybookExecutor(RemoteExecutor):
           compliance with RFC 4122. This GUID is used to identify one specific
           execution of Ansible playbook. We'll be using only the first part of
           that GUID, which admittedly does not guarantee complete uniqueness.
-          But the chance of collision is so low that the benefir of having short
-          identifier outweights that risk.
+          But the chance of collision is so low that the benefir of having
+          short identifier outweights that risk.
         - RemoteExecutor usually instantiates its own logger (called
           RemoteExecutor by the class name) that has no handlers or formatters
           specified and that inherits them from a parent logger. This is also
           the default behavior of PlaybookExecutor. However, if we instantiated
           our Host object with playbook_logger, we can pass it to
-          PlaybookExecutorFactory and the resulting instance of PlaybookExecutor
-          will use that logger (along with its handlers and formatters) instead.
-          This is useful when you want to redirect Ansible output to other
-          destination than what your app's main logger logs to.
+          PlaybookExecutorFactory and the resulting instance of
+          PlaybookExecutor will use that logger (along with its handlers and
+          formatters) instead. This is useful when you want to redirect Ansible
+          output to other destination than what your app's main logger logs to.
         - We also provide different LoggerAdapter here. Its main purpose is to
           enrich emitted LogRecord with run's GUID.
     """
@@ -368,7 +373,7 @@ class PlaybookExecutor(RemoteExecutor):
         """
         def process(self, msg, kwargs):
             return (
-                "[%s] %s" % (self.extra['self'].short_run_uuid, msg), 
+                "[%s] %s" % (self.extra['self'].short_run_uuid, msg),
                 kwargs,
             )
 

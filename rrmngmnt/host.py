@@ -62,8 +62,8 @@ class Host(Resource):
         Args:
             ip (str): IP address of machine or resolvable FQDN
             service_provider (Service): system service handler
-            playbook_logger (logging.Logger): You may provide alternative logger
-            only for Ansible-related events
+            playbook_logger (logging.Logger): You may provide alternative
+            logger only for Ansible-related events
         """
         super(Host, self).__init__()
         if not netaddr.valid_ipv4(ip) and not netaddr.valid_ipv6(ip):
@@ -234,7 +234,7 @@ class Host(Resource):
             ef.use_pkey = pkey
             return ef(self.ip, user)
         return self.executor_factory.build(self, user)
-    
+
     def playbook_executor(self):
         """
         Gives you executor allowing you Ansible playbook execution.
@@ -245,7 +245,7 @@ class Host(Resource):
         """
         return self.playbook_executor_factory.build(
             self,
-            self.executor_user, 
+            self.executor_user,
             executor_logger=self.playbook_logger
         )
 
@@ -277,9 +277,9 @@ class Host(Resource):
         return rc, out, err
 
     def run_playbook(
-        self, playbook_path_local, playbook_remote_dir="/root", extra_vars=None,
-        run_in_check_mode=False, vars_files=None, verbose_level=1, 
-        inventory=None, tcp_timeout=None, io_timeout=None
+        self, playbook_path_local, playbook_remote_dir="/root",
+        extra_vars=None, run_in_check_mode=False, vars_files=None,
+        verbose_level=1, inventory=None, tcp_timeout=None, io_timeout=None
     ):
         """
         Run Ansible playbook on host
@@ -291,15 +291,15 @@ class Host(Resource):
             extra_vars (dict): Dictionary of extra variables that are to be
             provided to playbook execution. They will be dumpled into JSON file
             and included using -e@ parameter
-            run_in_check_mode (bool): If True, playbook will not actually be 
+            run_in_check_mode (bool): If True, playbook will not actually be
             executed, but instead run with --check parameter
-            vars_files (list): List of additional variable files on your local 
+            vars_files (list): List of additional variable files on your local
             file system to be included using -e@ parameter. Variables specified
             in those files will override those specified in extra_vars param
-            verbose_level (int): How much should playbook be verbose. Possible 
+            verbose_level (int): How much should playbook be verbose. Possible
             values are 1 through 5
             inventory (str): Path to an inventory file on your local file
-            system. If none is provided, inventory including localhost will be 
+            system. If none is provided, inventory including localhost will be
             generated and used
             tcp_timeout (float): tcp timeout
             io_timeout (float): timeout for data operation (read/write)
@@ -310,12 +310,14 @@ class Host(Resource):
         files = []  # Files created on host by this function
 
         executor = self.playbook_executor()
-        
+
         # Upload playbook to the host
         playbook_path_remote = os.path.join(
             playbook_remote_dir, os.path.basename(playbook_path_local),
         )
-        self.fs.put(path_src=playbook_path_local, path_dst=playbook_path_remote)
+        self.fs.put(
+            path_src=playbook_path_local, path_dst=playbook_path_remote
+        )
         files.append(playbook_path_remote)
 
         # Dump user-provided extra vars to a file
@@ -327,7 +329,7 @@ class Host(Resource):
                 content=json.dumps(extra_vars), path=extra_vars_file,
             )
             files.append(extra_vars_file)
-        
+
         # Either upload user-provided inventory or create a default one
         if inventory is None:
             default_inventory_file = os.path.join(
@@ -345,7 +347,7 @@ class Host(Resource):
             inventory = inventory_on_host
         files.append(inventory)
 
-        # Upload other files with variables to be included in playbook execution
+        # Upload other variable files to be included in playbook execution
         if vars_files:
             vars_files_on_host = []
             for vars_file in vars_files:
@@ -383,7 +385,7 @@ class Host(Resource):
             io_timeout=io_timeout, follow_output=True,
         )
         self.logger.info(
-            "Ansible playbook with ID %s finished with RC %s", 
+            "Ansible playbook with ID %s finished with RC %s",
             executor.short_run_uuid, rc,
         )
 

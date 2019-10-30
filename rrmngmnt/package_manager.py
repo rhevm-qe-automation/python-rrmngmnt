@@ -86,7 +86,7 @@ class PackageManager(Service):
             )
         cmd = self.list_command_d
         self.logger.debug(
-            "Getting all instaled packages from host %s", self.host
+            "Getting all installed packages from host %s", self.host
         )
         rc, out, err = self.host.executor().run_cmd(cmd)
         if not rc:

@@ -1,5 +1,6 @@
 import os
 import time
+import uuid
 import socket
 import paramiko
 import contextlib
@@ -21,12 +22,12 @@ class RemoteExecutor(Executor):
     Any resource which provides SSH service.
 
     This class is meant to replace our current utilities.machine.LinuxMachine
-    classs. This allows you to lower access to communicate with ssh.
+    class. This allows you to lower access to communicate with ssh.
     Like a live interaction, getting rid of True/False results, and
     mixing stdout with stderr.
 
     You can still use use 'run_cmd' method if you don't care.
-    But I would recommed you to work like this:
+    But I would recommend you to work like this:
     """
 
     TCP_TIMEOUT = 10.0
@@ -118,9 +119,12 @@ class RemoteExecutor(Executor):
         def command(self, cmd):
             return RemoteExecutor.Command(cmd, self)
 
-        def run_cmd(self, cmd, input_=None, timeout=None):
+        def run_cmd(self, cmd, input_=None, timeout=None, follow_output=False):
             cmd = self.command(cmd)
-            return cmd.run(input_, timeout)
+            return (
+                cmd.run_real_time(timeout) if follow_output 
+                else cmd.run(input_, timeout)
+            )
 
         @contextlib.contextmanager
         def open_file(self, path, mode='r', bufsize=-1):
@@ -159,7 +163,7 @@ class RemoteExecutor(Executor):
             return self._rc
 
         @contextlib.contextmanager
-        def execute(self, bufsize=-1, timeout=None, get_pty=False):
+        def execute(self, bufsize=-1, timeout=None, get_pty=False, log_result=True):
             """
             This method allows you to work directly with streams.
 
@@ -187,10 +191,11 @@ class RemoteExecutor(Executor):
                     self._out.close()
                 if self._err is not None:
                     self._err.close()
-                self.logger.debug("Results of command: %s", self.cmd)
-                self.logger.debug("  OUT: %s", self.out)
-                self.logger.debug("  ERR: %s", self.err)
-                self.logger.debug("  RC: %s", self.rc)
+                if log_result:
+                    self.logger.debug("Results of command: %s", self.cmd)
+                    self.logger.debug("  OUT: %s", self.out)
+                    self.logger.debug("  ERR: %s", self.err)
+                    self.logger.debug("  RC: %s", self.rc)
 
         def run(self, input_, timeout=None, get_pty=False):
             with self.execute(
@@ -200,6 +205,24 @@ class RemoteExecutor(Executor):
                     in_.write(input_)
                     in_.close()
                 self.out = normalize_string(out.read())
+                self.err = normalize_string(err.read())
+            return self.rc, self.out, self.err
+        
+        def run_real_time(self, timeout=None, get_pty=False):
+            """
+            This function executes command and continuously (line by line) logs
+            its output on debug level. 
+            """
+            with self.execute(
+                timeout=timeout, get_pty=get_pty, log_result=False
+            ) as (in_, out, err):
+                self.logger.info("Following in real time: %s", self.cmd)
+                captured_out = ""
+                for line in iter(out.readline, ""):
+                    captured_out += line
+                    self.logger.debug(line.rstrip('\n'))
+                self.logger.debug('')
+                self.out = normalize_string(captured_out)
                 self.err = normalize_string(err.read())
             return self.rc, self.out, self.err
 
@@ -226,19 +249,20 @@ class RemoteExecutor(Executor):
         """
         return RemoteExecutor.Session(self, timeout)
 
-    def run_cmd(self, cmd, input_=None, tcp_timeout=None, io_timeout=None):
+    def run_cmd(self, cmd, input_=None, tcp_timeout=None, io_timeout=None, follow_output=False):
         """
         Args:
             tcp_timeout (float): Tcp timeout
             cmd (list): Command
             input_ (str): Input data
             io_timeout (float): Timeout for data operation (read/write)
+            follow_output (bool): Log each line as soon as it gets to stdout
 
         Returns:
             tuple (int, str, str): Rc, out, err
         """
         with self.session(tcp_timeout) as session:
-            return session.run_cmd(cmd, input_, io_timeout)
+                return session.run_cmd(cmd, input_, io_timeout, follow_output)
 
     def is_connective(self, tcp_timeout=20.0):
         """
@@ -294,7 +318,63 @@ class RemoteExecutor(Executor):
         return True
 
 
+class PlaybookExecutor(RemoteExecutor):
+    """
+    This is basically enriched RemoteExecutor created specifically for remote
+    execution of Ansible playbooks. It differs from RemoteExecutor in three
+    aspects:
+        - Each instance of PlaybookExecutor generates a globally unique ID in
+          compliance with RFC 4122. This GUID is used to identify one specific
+          execution of Ansible playbook. We'll be using only the first part of
+          that GUID, which admittedly does not guarantee complete uniqueness.
+          But the chance of collision is so low that the benefir of having short
+          identifier outweights that risk.
+        - RemoteExecutor usually instantiates its own logger (called
+          RemoteExecutor by the class name) that has no handlers or formatters
+          specified and that inherits them from a parent logger. This is also
+          the default behavior of PlaybookExecutor. However, if we instantiated
+          our Host object with playbook_logger, we can pass it to
+          PlaybookExecutorFactory and the resulting instance of PlaybookExecutor
+          will use that logger (along with its handlers and formatters) instead.
+          This is useful when you want to redirect Ansible output to other
+          destination than what your app's main logger logs to.
+        - We also provide different LoggerAdapter here. Its main purpose is to
+          enrich emitted LogRecord with run's GUID.
+    """
+    playbook_cmd = 'ansible-playbook'
+    check_mode_param = '--check'
+
+    def __init__(self, user, address, port, executor_logger):
+        """
+        Args:
+            user (instance of User): User
+            address (str): Ip / hostname
+            port (int): Port to connect
+            executor_logger (logging.Logger): This logger will be used to log
+            Ansible playbook output if provided
+        """
+        super(PlaybookExecutor, self).__init__(
+            user, address, use_pkey=False, port=22,
+        )
+        self.run_uuid = uuid.uuid4()
+        self.short_run_uuid = str(self.run_uuid).split('-')[0]
+        if executor_logger is not None:
+            self.logger.logger = executor_logger
+
+    class LoggerAdapter(Executor.LoggerAdapter):
+        """
+        Makes sure that all logs which are done via this class have run's GUID
+        preffixed.
+        """
+        def process(self, msg, kwargs):
+            return (
+                "[%s] %s" % (self.extra['self'].short_run_uuid, msg), 
+                kwargs,
+            )
+
+
 class RemoteExecutorFactory(ExecutorFactory):
+
     def __init__(self, use_pkey=False, port=22):
         self.use_pkey = use_pkey
         self.port = port
@@ -302,3 +382,14 @@ class RemoteExecutorFactory(ExecutorFactory):
     def build(self, host, user):
         return RemoteExecutor(
             user, host.ip, use_pkey=self.use_pkey, port=self.port)
+
+
+class PlaybookExecutorFactory(ExecutorFactory):
+
+    def __init__(self, port=22):
+        self.port = port
+
+    def build(self, host, user, executor_logger):
+        return PlaybookExecutor(
+            user, host.ip, port=self.port, executor_logger=executor_logger,
+        )

@@ -4,6 +4,7 @@ It should hold methods / properties which returns you Instance of specific
 Service hosted on that Host.
 """
 import copy
+import json
 import os
 import socket
 import threading
@@ -40,6 +41,7 @@ class Host(Resource):
         InitCtl,
     ]
     executor_factory = ssh.RemoteExecutorFactory()
+    playbook_executor_factory = ssh.PlaybookExecutorFactory()
 
     class LoggerAdapter(Resource.LoggerAdapter):
         """
@@ -55,11 +57,13 @@ class Host(Resource):
                 kwargs,
             )
 
-    def __init__(self, ip, service_provider=None):
+    def __init__(self, ip, service_provider=None, playbook_logger=None):
         """
         Args:
             ip (str): IP address of machine or resolvable FQDN
             service_provider (Service): system service handler
+            playbook_logger (logging.Logger): You may provide alternative logger
+            only for Ansible-related events
         """
         super(Host, self).__init__()
         if not netaddr.valid_ipv4(ip) and not netaddr.valid_ipv6(ip):
@@ -71,6 +75,7 @@ class Host(Resource):
         self._service_provider = service_provider
         self._package_manager = PackageManagerProxy(self)
         self.os = OperatingSystem(self)
+        self.playbook_logger = playbook_logger
         self.add()  # adding host to inventory
 
     def __str__(self):
@@ -154,7 +159,7 @@ class Host(Resource):
             if user.get_full_name() == name:
                 return user
         raise Exception(
-            "User '%s' is not assoiated with host %s" % (name, self)
+            "User '%s' is not associated with host %s" % (name, self)
         )
 
     def add_user(self, user):
@@ -229,6 +234,20 @@ class Host(Resource):
             ef.use_pkey = pkey
             return ef(self.ip, user)
         return self.executor_factory.build(self, user)
+    
+    def playbook_executor(self):
+        """
+        Gives you executor allowing you Ansible playbook execution.
+        Current implementation does not allow for specifying user.
+
+        Returns:
+            ssh.PlaybookExecutor: Ansible playbook executor
+        """
+        return self.playbook_executor_factory.build(
+            self,
+            self.executor_user, 
+            executor_logger=self.playbook_logger
+        )
 
     def run_command(
         self, command, input_=None, tcp_timeout=None, io_timeout=None,
@@ -255,6 +274,123 @@ class Host(Resource):
             self.logger.error(
                 "Failed to run command %s ERR: %s OUT: %s", command, err, out
             )
+        return rc, out, err
+
+    def run_playbook(
+        self, playbook_path_local, playbook_remote_dir="/root", extra_vars=None,
+        run_in_check_mode=False, vars_files=None, verbose_level=1, 
+        inventory=None, tcp_timeout=None, io_timeout=None
+    ):
+        """
+        Run Ansible playbook on host
+
+        Args:
+            playbook_path_local (str): Path to playbook on your machine
+            playbook_remote_dir (str): Directory on host where you want the
+            playbook to be place
+            extra_vars (dict): Dictionary of extra variables that are to be
+            provided to playbook execution. They will be dumpled into JSON file
+            and included using -e@ parameter
+            run_in_check_mode (bool): If True, playbook will not actually be 
+            executed, but instead run with --check parameter
+            vars_files (list): List of additional variable files on your local 
+            file system to be included using -e@ parameter. Variables specified
+            in those files will override those specified in extra_vars param
+            verbose_level (int): How much should playbook be verbose. Possible 
+            values are 1 through 5
+            inventory (str): Path to an inventory file on your local file
+            system. If none is provided, inventory including localhost will be 
+            generated and used
+            tcp_timeout (float): tcp timeout
+            io_timeout (float): timeout for data operation (read/write)
+
+        Returns:
+            tuple: tuple of (rc, out, err)
+        """
+        files = []  # Files created on host by this function
+
+        executor = self.playbook_executor()
+        
+        # Upload playbook to the host
+        playbook_path_remote = os.path.join(
+            playbook_remote_dir, os.path.basename(playbook_path_local),
+        )
+        self.fs.put(path_src=playbook_path_local, path_dst=playbook_path_remote)
+        files.append(playbook_path_remote)
+
+        # Dump user-provided extra vars to a file
+        if extra_vars:
+            extra_vars_file = os.path.join(
+                playbook_remote_dir, "extra_vars.json"
+            )
+            self.fs.create_file(
+                content=json.dumps(extra_vars), path=extra_vars_file,
+            )
+            files.append(extra_vars_file)
+        
+        # Either upload user-provided inventory or create a default one
+        if inventory is None:
+            default_inventory_file = os.path.join(
+                playbook_remote_dir, "inventory",
+            )
+            inventory = default_inventory_file
+            self.fs.create_file(
+                content='localhost ansible_connection=local', path=inventory,
+            )
+        else:
+            inventory_on_host = os.path.join(
+                playbook_remote_dir, os.path.basename(inventory),
+            )
+            self.fs.put(path_src=inventory, path_dst=inventory_on_host)
+            inventory = inventory_on_host
+        files.append(inventory)
+
+        # Upload other files with variables to be included in playbook execution
+        if vars_files:
+            vars_files_on_host = []
+            for vars_file in vars_files:
+                vars_file_on_host = os.path.join(
+                    playbook_remote_dir, os.path.basename(vars_file),
+                )
+                self.fs.put(path_src=vars_file, path_dst=vars_file_on_host)
+                vars_files_on_host.append(vars_file_on_host)
+            files.extend(vars_files_on_host)
+
+        # Compose command that will be executed on host
+        cmd = [
+            executor.playbook_cmd,
+            "-{}".format("v" * verbose_level),
+            "-i",
+            inventory,
+        ]
+        if extra_vars:
+            cmd.append("-e@{}".format(extra_vars_file))
+        if vars_files:
+            for vars_file in vars_files_on_host:
+                cmd.append("-e@{}".format(vars_file))
+        if run_in_check_mode:
+            cmd.append(executor.check_mode_param)
+        cmd.append(playbook_path_remote)
+
+        # Execute the playbook
+        self.logger.info(
+            "Executing Ansible playbook with ID: %s", executor.short_run_uuid,
+        )
+        self.logger.info("Ansible playbook command: %s", " ".join(cmd))
+        self.logger.info("Ansible extra vars: %s", extra_vars)
+        rc, out, err = executor.run_cmd(
+            cmd, tcp_timeout=tcp_timeout,
+            io_timeout=io_timeout, follow_output=True,
+        )
+        self.logger.info(
+            "Ansible playbook with ID %s finished with RC %s", 
+            executor.short_run_uuid, rc,
+        )
+
+        # Clean-up
+        for f in files:
+            self.fs.remove(f)
+
         return rc, out, err
 
     def copy_to(self, resource, src, dst, mode=None, ownership=None):

@@ -31,6 +31,10 @@ class Executor(Resource):
         def logger(self):
             return self._executor.logger
 
+        @property
+        def real_time_log(self):
+            return self._executor.real_time_log
+
         def __enter__(self):
             self.open()
             return self
@@ -63,6 +67,10 @@ class Executor(Resource):
         @property
         def logger(self):
             return self._ss.logger
+
+        @property
+        def real_time_log(self):
+            return self._ss.real_time_log
 
         def run(self, input_):
             raise NotImplementedError()

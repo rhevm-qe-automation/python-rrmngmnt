@@ -188,8 +188,7 @@ class RemoteExecutor(Executor):
                 if self._err is not None:
                     self._err.close()
                 self.logger.debug("Results of command: %s", self.cmd)
-                if not self.real_time_log:
-                    self.logger.debug("  OUT: %s", self.out)
+                self.logger.debug("  OUT: %s", self.out)
                 self.logger.debug("  ERR: %s", self.err)
                 self.logger.debug("  RC: %s", self.rc)
 
@@ -200,23 +199,11 @@ class RemoteExecutor(Executor):
                 if input_:
                     in_.write(input_)
                     in_.close()
-                if self.real_time_log:
-                    captured_out = ""
-                    for line in iter(out.readline, ""):
-                        captured_out += line
-                        self.logger.debug(line.rstrip('\n'))
-                    self.logger.debug('')
-                self.out = (
-                    normalize_string(out.read()) if not self.real_time_log
-                    else normalize_string(captured_out)
-                )
+                self.out = normalize_string(out.read())
                 self.err = normalize_string(err.read())
             return self.rc, self.out, self.err
 
-    def __init__(
-        self, user, address, use_pkey=False, port=22,
-        logger=None, real_time_log=False
-    ):
+    def __init__(self, user, address, use_pkey=False, port=22):
         """
         Args:
             use_pkey (bool): Use ssh private key in the connection
@@ -228,9 +215,6 @@ class RemoteExecutor(Executor):
         self.address = address
         self.use_pkey = use_pkey
         self.port = port
-        if logger is not None:
-            self.set_logger(logger)
-        self.real_time_log = real_time_log
 
     def session(self, timeout=None):
         """
@@ -315,8 +299,6 @@ class RemoteExecutorFactory(ExecutorFactory):
         self.use_pkey = use_pkey
         self.port = port
 
-    def build(self, host, user, logger, real_time_log):
+    def build(self, host, user):
         return RemoteExecutor(
-            user, host.ip, use_pkey=self.use_pkey,
-            port=self.port, logger=logger, real_time_log=real_time_log
-        )
+            user, host.ip, use_pkey=self.use_pkey, port=self.port)

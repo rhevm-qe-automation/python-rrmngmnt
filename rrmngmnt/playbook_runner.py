@@ -3,15 +3,14 @@ import json
 import os.path
 import uuid
 
+from rrmngmnt.common import CommandReader
 from rrmngmnt.resource import Resource
 from rrmngmnt.service import Service
 
 
-# TODO: Add debug messages
-
 class PlaybookRunner(Service):
 
-    class PlaybookAdapter(Resource.LoggerAdapter):
+    class LoggerAdapter(Resource.LoggerAdapter):
         def process(self, msg, kwargs):
             return (
                 "[%s] %s" % (
@@ -28,8 +27,10 @@ class PlaybookRunner(Service):
     default_inventory_content = "localhost ansible_connection=local"
     check_mode_param = "--check"
 
-    def __init__(self, host):
+    def __init__(self, host, logger=None):
         super(PlaybookRunner, self).__init__(host)
+        if logger:
+            self.set_logger(logger)
         self.run_uuid = uuid.uuid4()
         self.short_run_uuid = str(self.run_uuid).split('-')[0]
         self.tmp_exec_dir = None
@@ -80,7 +81,7 @@ class PlaybookRunner(Service):
 
     def run(
         self, playbook, extra_vars=None, vars_files=None, inventory=None,
-        verbose_level=1, run_in_check_mode=False, playbook_logger=None
+        verbose_level=1, run_in_check_mode=False
     ):
         """
         Run Ansible playbook on host
@@ -101,16 +102,17 @@ class PlaybookRunner(Service):
                 the most verbose
             run_in_check_mode (bool): If True, playbook will not actually be
                 executed, but instead run with --check parameter
-            playbook_logger (logging.Logger): If you want to redirect output of
-                Ansible playbook to an alternate location, you can provide
-                instance of logging.Logger here. Your logger will be modified
-                by PlaybookAdapter which makes sure that each line of Ansible
-                output is matched with short run ID. If no logger is provided
-                here, RemoteExecutor logger will be used
 
         Returns:
             tuple: tuple of (rc, out, err)
         """
+        self.logger.info(
+            "Running playbook {} on {}".format(
+                os.path.basename(playbook),
+                self.host.fqdn
+            )
+        )
+
         with self._exec_dir():
 
             if extra_vars:
@@ -135,25 +137,19 @@ class PlaybookRunner(Service):
 
             self.cmd.append(self._upload_file(playbook))
 
-            self.logger.info(
-                "Executing: {}. Playbook run ID: {}".format(
-                    " ".join(self.cmd), self.short_run_uuid
-                )
-            )
-            if playbook_logger:
-                playbook_logger = self.PlaybookAdapter(
-                    playbook_logger,
-                    {'self': self}
-                )
-            self.rc, self.out, self.err = self.host.executor(
-                real_time_log=True,
-                logger=playbook_logger
-            ).run_cmd(self.cmd)
+            self.logger.debug("Executing: {}".format(" ".join(self.cmd)))
 
-            self.logger.info(
-                "Ansible playbook run with ID {} finished with RC: {}".format(
-                    self.short_run_uuid, self.rc
-                )
+            playbook_reader = CommandReader(self.host.executor(), self.cmd)
+            for line in playbook_reader.read_lines():
+                self.logger.debug(line)
+            self.rc, self.out, self.err = (
+                playbook_reader.rc,
+                playbook_reader.out,
+                playbook_reader.err
+            )
+
+            self.logger.debug(
+                "Ansible playbook finished with RC: {}".format(self.rc)
             )
 
         return self.rc, self.out, self.err

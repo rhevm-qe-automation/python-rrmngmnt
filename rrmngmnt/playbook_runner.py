@@ -122,7 +122,7 @@ class PlaybookRunner(Service):
 
             if vars_files:
                 for f in vars_files:
-                    self.cmd.append("-e@{}".format(f))
+                    self.cmd.append("-e@{}".format(self._upload_file(f)))
 
             self.cmd.append("-i")
             if inventory:

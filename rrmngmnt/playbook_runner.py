@@ -9,16 +9,31 @@ from rrmngmnt.service import Service
 
 
 class PlaybookRunner(Service):
+    """
+    Class for working with and especially executing Ansible playbooks on hosts.
+    On your Host instance, it might be accessed (similar to other services) by
+    playbook property.
 
+    Example:
+        rc,out, err = my_host.playbook.run('long_task.yml')
+
+    In such case, the default logger of this class (called PlaybookRunner) will
+    be used to log playbook's output. It will propagate events to handlers of
+    ancestor loggers. However, PlaybookRunner might also be directly
+    instantiated with instance of logging.Logger passed to logger parameter.
+
+    Example:
+        my_runner = PlaybookRunner(my_host, logging.getLogger('playbook'))
+        rc, out, err = my_runner.run('long_task.yml')
+
+    In that case, custom provided logger will be used instead. In both cases,
+    each log record will be prefixed with UUID generated specifically for that
+    one playbook execution.
+    """
     class LoggerAdapter(Resource.LoggerAdapter):
+
         def process(self, msg, kwargs):
-            return (
-                "[%s] %s" % (
-                    self.extra['self'].short_run_uuid,
-                    msg
-                ),
-                kwargs
-            )
+            return "[%s] %s" % (self.extra['self'].short_run_uuid, msg), kwargs
 
     tmp_dir = "/tmp"
     binary = "ansible-playbook"
@@ -28,6 +43,11 @@ class PlaybookRunner(Service):
     check_mode_param = "--check"
 
     def __init__(self, host, logger=None):
+        """
+        Args:
+            host (rrmngmnt.Host): Underlying host for this service
+            logger (logging.Logger): Alternate logger for Ansible output
+        """
         super(PlaybookRunner, self).__init__(host)
         if logger:
             self.set_logger(logger)
@@ -41,8 +61,11 @@ class PlaybookRunner(Service):
 
     @contextlib.contextmanager
     def _exec_dir(self):
-        # In temporary location, create a directory whose name is same
-        # as the short run UUID
+        """
+        Context manager that makes sure that for each execution of playbook,
+        temporary directory (whose name is the same as run's UUID) is created
+        on the host and removed afterwards.
+        """
         exec_dir_path = os.path.join(self.tmp_dir, self.short_run_uuid)
         self.host.fs.rmdir(exec_dir_path)
         self.host.fs.mkdir(exec_dir_path)
@@ -87,16 +110,17 @@ class PlaybookRunner(Service):
         Run Ansible playbook on host
 
         Args:
-            playbook (str): Path to playbook you want to execute
+            playbook (str): Path to playbook you want to execute (on your
+                machine)
             extra_vars (dict): Dictionary of extra variables that are to be
-                passed to playbook execution. They will be dumped into JSON
-                file and included using -e@ parameter
+                passed to playbook execution. They will be dumped to JSON file
+                and included using -e@ parameter
             vars_files (list): List of additional variable files to be included
                 using -e@ parameter. Variables specified in those files will
                 override those specified in extra_vars param
-            inventory (str): Path to an inventory file to be used for playbook
-                execution. If none is provided, default inventory including
-                only localhost will be generated and used
+            inventory (str): Path to an inventory file (on your machine) to be
+                used for playbook execution. If none is provided, default
+                inventory including only localhost will be generated and used
             verbose_level (int): How much should playbook be verbose. Possible
                 values are 1 through 5 with 1 being the most quiet and 5 being
                 the most verbose

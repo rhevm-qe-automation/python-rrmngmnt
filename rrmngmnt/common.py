@@ -40,18 +40,46 @@ def normalize_string(data):
 
 
 class CommandReader(object):
+    """
+    This class is for gradual reading of commands output lines as they come in.
+    Each instance of CommandReader is tied to one command and one executor.
+    The executor calls the command only once the method read_lines is called.
+    After the execution of command finishes, CommandReader object may be
+    queried for return code, stdout and stderr of the command.
 
-    def __init__(self, executor, cmd, session_timeout=None, cmd_input=None):
+    Example usage:
+        my_host = Host("1.2.3.4")
+        my_host.users.append(RootUser("1234"))
+        my_executor = my_host.executor()
+        cr = CommandReader(my_executor, ['ansible-playbook', 'long_task.yml']
+        for line in cr.read_lines():
+            print(line)
+    """
+
+    def __init__(self, executor, cmd, cmd_input=None):
+        """
+        Args:
+            executor (rrmngmnt.Executor): instance of rrmngmnt.Executor class
+                or one of its subclasses that executes provided command
+            cmd (list): Command to be executed
+            cmd_input(str): Input for the command
+        """
         self.executor = executor
         self.cmd = cmd
-        self.session_timeout = session_timeout
         self.cmd_input = cmd_input
         self.rc = None
         self.out = ''
         self.err = ''
 
     def read_lines(self):
-        with self.executor.session(self.session_timeout) as ss:
+        """
+        Generator that yields lines of command output as they come to
+        underlying file handler.
+
+        Yields:
+            str: Line of command's output stripped of newline character
+        """
+        with self.executor.session() as ss:
             command = ss.command(self.cmd)
             with command.execute() as (in_, out, err):
                 if self.cmd_input:
@@ -62,6 +90,6 @@ class CommandReader(object):
                     self.out += line
                     if not line:
                         break
-                    yield line.strip()
+                    yield line.strip('\n')
                 self.rc = command.rc
                 self.err = err.read()

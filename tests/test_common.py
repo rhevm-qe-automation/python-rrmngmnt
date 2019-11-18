@@ -19,11 +19,12 @@ def test_fqdn2ip_negative():
 
 
 class TestCommandReader(object):
+
     data = {
         'cat shopping_list.txt': (0, 'bananas\nmilk\nhuge blender', ''),
         'cat milk_shake_recipe.txt': (
-            1, '',
-            'cat: milk_shake_recipe.txt: No such file or directory'),
+            1, '', 'cat: milk_shake_recipe.txt: No such file or directory'
+        ),
     }
     files = {}
 

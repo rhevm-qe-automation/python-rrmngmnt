@@ -18,9 +18,9 @@ class PlaybookRunnerBase(object):
     vars_file_content = ''
     inventory_name = 'my_inventory'
     inventory_content = ''
+    tmp_dir = os.path.join(PlaybookRunner.tmp_dir, fake_run_uuid)
     success = (0, '', '')
     failure = (1, '', '')
-    tmp_dir = os.path.join(PlaybookRunner.tmp_dir, fake_run_uuid)
 
     data = {
         # Filesystem-related operations
@@ -107,6 +107,25 @@ class PlaybookRunnerBase(object):
         return playbook_runner
 
     def check_files_on_host(self, files=None):
+        """
+        Check that all files provided to files parameter (and only those) have
+        been "copied" to our imaginary host. In reality, they should not be
+        present on host once the playbook's execution is done. However here
+        we'll use the fact that our fake host does not really implements file
+        removal. Because of this, in the end of the test case, we can check
+        that files that should have been copied to the host (by using
+        FileSystem service) have actually been sent there.
+
+        Args:
+            files (list): List of files that should have been copied to the
+                host. Don't include test playbook into this list since its
+                presence is implicitly expected. You can also provide only one
+                file as a string.
+
+        Returns:
+            bool: True if files expected on host and those present match, False
+                otherwise
+        """
         if files is None:
             files = []
         if isinstance(files, str):

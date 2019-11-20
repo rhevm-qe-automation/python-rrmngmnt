@@ -12,13 +12,17 @@ class PlaybookRunnerBase(object):
     # The fake run UUID will be used instead of unique ID that's auto-generated
     # for each playbook execution
     fake_run_uuid = '123'
+
     playbook_name = 'test.yml'
     playbook_content = ''
     vars_file_name = 'my_vars.yml'
     vars_file_content = ''
     inventory_name = 'my_inventory'
     inventory_content = ''
+    ssh_no_strict_host_key_checking = "-o StrictHostKeyChecking=no"
+
     tmp_dir = os.path.join(PlaybookRunner.tmp_dir, fake_run_uuid)
+
     success = (0, '', '')
     failure = (1, '', '')
 
@@ -84,6 +88,17 @@ class PlaybookRunnerBase(object):
             check_mode_param=PlaybookRunner.check_mode_param,
             playbook=playbook_name
         ): success,
+        # Running with extended SSH common args
+        '{bin} -i {tmp_dir}/{inventory} '
+        '-v "{ssh_common_args_param}={ssh_common_args}" '
+        '{tmp_dir}/{playbook}'.format(
+            bin=PlaybookRunner.binary,
+            tmp_dir=tmp_dir,
+            inventory=PlaybookRunner.default_inventory_name,
+            ssh_common_args_param=PlaybookRunner.ssh_common_args_param,
+            ssh_common_args=ssh_no_strict_host_key_checking,
+            playbook=playbook_name
+        ): success,
     }
 
     @classmethod
@@ -123,8 +138,8 @@ class PlaybookRunnerBase(object):
                 file as a string.
 
         Returns:
-            bool: True if files expected on host and those present match, False
-                otherwise
+            bool: True if files expected on host and those present match,
+                False otherwise
         """
         if files is None:
             files = []
@@ -245,6 +260,25 @@ class TestCheckMode(PlaybookRunnerBase):
         rc, _, _ = playbook_runner.run(
             playbook=fake_playbook,
             run_in_check_mode=True
+        )
+        assert not rc
+        assert self.check_files_on_host(
+            os.path.join(self.tmp_dir, PlaybookRunner.default_inventory_name)
+        )
+
+
+class TestSSHCommonArgs(PlaybookRunnerBase):
+
+    files = {}
+
+    def test_no_strict_host_key_checking(self, playbook_runner, fake_playbook):
+        """
+        User has provided custom SSH argument that extend default Ansible SSH
+        arguments
+        """
+        rc, _, _ = playbook_runner.run(
+            playbook=fake_playbook,
+            ssh_common_args=[self.ssh_no_strict_host_key_checking]
         )
         assert not rc
         assert self.check_files_on_host(

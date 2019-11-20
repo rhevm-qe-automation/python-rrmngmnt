@@ -40,6 +40,7 @@ class PlaybookRunner(Service):
     extra_vars_file = "extra_vars.json"
     default_inventory_name = "inventory"
     default_inventory_content = "localhost ansible_connection=local"
+    ssh_common_args_param = "--ssh-common-args"
     check_mode_param = "--check"
 
     def __init__(self, host, logger=None):
@@ -83,7 +84,7 @@ class PlaybookRunner(Service):
         self.host.fs.put(path_src=file_, path_dst=file_path_on_host)
         return file_path_on_host
 
-    def _dump_vars_to_json(self, vars_):
+    def _dump_vars_to_json_file(self, vars_):
         file_path_on_host = os.path.join(
             self.tmp_exec_dir, self.extra_vars_file
         )
@@ -104,7 +105,7 @@ class PlaybookRunner(Service):
 
     def run(
         self, playbook, extra_vars=None, vars_files=None, inventory=None,
-        verbose_level=1, run_in_check_mode=False
+        verbose_level=1, run_in_check_mode=False, ssh_common_args=None,
     ):
         """
         Run Ansible playbook on host
@@ -116,8 +117,9 @@ class PlaybookRunner(Service):
                 passed to playbook execution. They will be dumped to JSON file
                 and included using -e@ parameter
             vars_files (list): List of additional variable files to be included
-                using -e@ parameter. Variables specified in those files will
-                override those specified in extra_vars param
+                using -e@ parameter. If one variable is specified both in
+                extra_vars and in one of the vars_files, the one in vars_files
+                takes precedence.
             inventory (str): Path to an inventory file (on your machine) to be
                 used for playbook execution. If none is provided, default
                 inventory including only localhost will be generated and used
@@ -126,6 +128,10 @@ class PlaybookRunner(Service):
                 the most verbose
             run_in_check_mode (bool): If True, playbook will not actually be
                 executed, but instead run with --check parameter
+            ssh_common_args (list): List of options that will extend (not
+                replace) the list of default options that Ansible uses when
+                calling ssh/sftp/scp. Example: ["-o StrictHostKeyChecking=no",
+                "-o UserKnownHostsFile=/dev/null"]
 
         Returns:
             tuple: tuple of (rc, out, err)
@@ -141,7 +147,7 @@ class PlaybookRunner(Service):
 
             if extra_vars:
                 self.cmd.append(
-                    "-e@{}".format(self._dump_vars_to_json(extra_vars))
+                    "-e@{}".format(self._dump_vars_to_json_file(extra_vars))
                 )
 
             if vars_files:
@@ -158,6 +164,13 @@ class PlaybookRunner(Service):
 
             if run_in_check_mode:
                 self.cmd.append(self.check_mode_param)
+
+            if ssh_common_args:
+                self.cmd.append(
+                    "{}={}".format(
+                        self.ssh_common_args_param, " ".join(ssh_common_args)
+                    )
+                )
 
             self.cmd.append(self._upload_file(playbook))
 

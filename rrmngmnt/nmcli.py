@@ -15,6 +15,7 @@ IPV6_STATIC = "ipv6.addresses {address} ipv6.gateway {gateway}"
 IPV4_METHOD = "ipv4.method {method}"
 IPV6_METHOD = "ipv6.method {method}"
 
+
 COMMON_OPTIONS = (
     "type {type}"
     "con-name {con_name} "
@@ -34,7 +35,9 @@ ERROR_MSG_FORMAT = (
 )
 
 NMCLI_COMMAND = "nmcli {options} {object} {command}"
+
 NMCLI_CONNECTION_DELETE = "nmcli connection delete {id}"
+
 NMCLI_CONNECTION_ADD = "nmcli connection add"
 
 logger = logging.getLogger(__name__)

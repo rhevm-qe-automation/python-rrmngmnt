@@ -15,7 +15,6 @@ IPV6_STATIC = "ipv6.addresses {address} ipv6.gateway {gateway}"
 IPV4_METHOD = "ipv4.method {method}"
 IPV6_METHOD = "ipv6.method {method}"
 
-
 COMMON_OPTIONS = (
     "type {type}"
     "con-name {con_name} "

@@ -12,9 +12,8 @@ from rrmngmnt.service import Service
 IPV4_STATIC = "ipv4.addresses {address} ipv4.gateway {gateway}"
 IPV6_STATIC = "ipv6.addresses {address} ipv6.gateway {gateway}"
 
-_IP_METHOD = "ipv{version}.method {method}"
-IPV4_METHOD = _IP_METHOD.format(version=4)
-IPV6_METHOD = _IP_METHOD.format(version=6)
+IPV4_METHOD = "ipv4.method {method}"
+IPV6_METHOD = "ipv6.method {method}"
 
 COMMON_OPTIONS = (
     "type {type}"
@@ -35,8 +34,7 @@ ERROR_MSG_FORMAT = (
 )
 
 NMCLI_COMMAND = "nmcli {options} {object} {command}"
-NMCLI_CONNECTION = "nmcli connection"
-NMCLI_CONNECTION_DELETE = NMCLI_CONNECTION + " delete {id}"
+NMCLI_CONNECTION_DELETE = "nmcli connection delete {id}"
 NMCLI_CONNECTION_ADD = "nmcli connection add"
 
 logger = logging.getLogger(__name__)

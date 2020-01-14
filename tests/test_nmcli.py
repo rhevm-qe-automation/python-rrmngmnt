@@ -6,8 +6,10 @@ import pytest
 
 from rrmngmnt import Host, RootUser
 from rrmngmnt.errors import CommandExecutionFailure
-from rrmngmnt.nmcli import ConnectionDoesNotExistException, \
+from rrmngmnt.nmcli import (
+    ConnectionDoesNotExistException,
     DeviceDoesNotExistException
+)
 from tests.common import FakeExecutorFactory
 
 MOCK_ROOT_PASSWORD = "11111"

@@ -16,7 +16,7 @@ IPV4_METHOD = "ipv4.method {method}"
 IPV6_METHOD = "ipv6.method {method}"
 
 COMMON_OPTIONS = (
-    "type {type}"
+    "type {type} "
     "con-name {con_name} "
     "ifname {ifname} "
     "autoconnect {auto_connect} "
@@ -99,7 +99,24 @@ class NMCLI(Service):
             return False
         return True
 
-    def get_connections_uuids(self):
+    def is_device_exist(self, device):
+        """
+        Checks if a device exists.
+
+        Args:
+            device (str): device name.
+
+        Returns:
+            bool: True if the device exists, or False if it does not.
+        """
+        command = "nmcli device show {dev}".format(dev=device)
+        try:
+            self._exec_command(command=command)
+        except CommandExecutionFailure:
+            return False
+        return True
+
+    def get_all_connections_uuids(self):
         """
         Gets existing NetworkManager profiles UUIDs.
 
@@ -187,7 +204,8 @@ class NMCLI(Service):
         )
         if self.is_connection_exist(connection=connection):
             self._exec_command(command=command)
-        raise ConnectionDoesNotExistException(connection)
+        else:
+            raise ConnectionDoesNotExistException(connection)
 
     def add_ethernet(
             self,
@@ -283,7 +301,7 @@ class NMCLI(Service):
             con_name (str): the created connection's name.
             ifname (str): the created bond's name.
             mode (str): bond mode.
-                Available modes are: mode balance-rr (0) | active-backup (1) |
+                Available modes are: balance-rr (0) | active-backup (1) |
                 balance-xor (2) | broadcast (3)
                 802.3ad (4) | balance-tlb (5) | balance-alb (6)
             miimon (int): specifies (in milliseconds) how often MII link
@@ -428,6 +446,9 @@ class NMCLI(Service):
             CommandExecutionFailure: if the remote host returned a code
             indicating a failure in execution.
         """
+        if not self.is_device_exist(device=dev):
+            raise DeviceDoesNotExistException(dev)
+
         common_options = self._generate_common_options(
             con_type="vlan",
             con_name=con_name,
@@ -541,7 +562,8 @@ class NMCLI(Service):
             self._exec_command(
                 command=NMCLI_CONNECTION_DELETE.format(id=connection)
             )
-        raise ConnectionDoesNotExistException(connection)
+        else:
+            raise ConnectionDoesNotExistException(connection)
 
     @staticmethod
     def _generate_common_options(
@@ -597,7 +619,7 @@ class NMCLI(Service):
             )
             if ip_method == IP_MANUAL_METHOD:
                 if address and gateway:
-                    ip_options += (
+                    ip_options += " " + (
                         IPV4_STATIC.format(
                             address=address,
                             gateway=gateway
@@ -618,3 +640,12 @@ class ConnectionDoesNotExistException(Exception):
 
     def __str__(self):
         return "connection {con} does not exist".format(con=self.con_name)
+
+
+class DeviceDoesNotExistException(Exception):
+    def __init__(self, device):
+        super(DeviceDoesNotExistException, self).__init__(device)
+        self.device = device
+
+    def __str__(self):
+        return "device {dev} does not exist".format(dev=self.device)

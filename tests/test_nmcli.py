@@ -309,8 +309,8 @@ class TestNmcliEthernetConnection(NmcliConnectionType):
             "autoconnect no save no "
             "ipv4.method manual ipv4.addresses 192.168.23.2 "
             "ipv4.gateway 192.168.23.254 "
-            "ipv6.method manual ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984/64 "  # noqa: E501
-            "ipv6.gateway 2a02:ed0:52fe:ec00::/56"
+            "ipv6.method manual ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "  # noqa: E501
+            "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (
             0,
             "",
@@ -366,8 +366,8 @@ class TestNmcliEthernetConnection(NmcliConnectionType):
             ipv4_addr="192.168.23.2",
             ipv4_gw="192.168.23.254",
             ipv6_method="manual",
-            ipv6_addr="2a02:ed0:52fe:ec00:dc3f:f939:a573:5984/64",
-            ipv6_gw="2a02:ed0:52fe:ec00::/56"
+            ipv6_addr="2a02:ed0:52fe:ec00:dc3f:f939:a573:5984",
+            ipv6_gw="2a02:ed0:52fe:ec00::"
         )
 
     def test_add_ethernet_with_mac(self, mock):
@@ -423,8 +423,8 @@ class TestNmcliBondConnection(NmcliConnectionType):
             "autoconnect no save no mode active-backup miimon 100 "
             "ipv4.method manual ipv4.addresses 192.168.23.2 "
             "ipv4.gateway 192.168.23.254 "
-            "ipv6.method manual ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984/64 "  # noqa: E501
-            "ipv6.gateway 2a02:ed0:52fe:ec00::/56"
+            "ipv6.method manual ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "  # noqa: E501
+            "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (
             0,
             "",
@@ -532,8 +532,8 @@ class TestNmcliBondConnection(NmcliConnectionType):
             ipv4_addr="192.168.23.2",
             ipv4_gw="192.168.23.254",
             ipv6_method="manual",
-            ipv6_addr="2a02:ed0:52fe:ec00:dc3f:f939:a573:5984/64",
-            ipv6_gw="2a02:ed0:52fe:ec00::/56"
+            ipv6_addr="2a02:ed0:52fe:ec00:dc3f:f939:a573:5984",
+            ipv6_gw="2a02:ed0:52fe:ec00::"
         )
 
     @pytest.mark.parametrize(
@@ -668,8 +668,8 @@ class TestNmcliVlanConnection(NmcliConnectionType):
             "dev enp8s0f0 id 163 "
             "ipv4.method manual ipv4.addresses 192.168.23.2 "
             "ipv4.gateway 192.168.23.254 "
-            "ipv6.method manual ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984/64 "  # noqa: E501
-            "ipv6.gateway 2a02:ed0:52fe:ec00::/56"
+            "ipv6.method manual ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "  # noqa: E501
+            "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (
             0,
             "",
@@ -786,8 +786,8 @@ class TestNmcliDummyConnection(NmcliConnectionType):
             "autoconnect no save no "
             "ipv4.method manual ipv4.addresses 192.168.23.2 "
             "ipv4.gateway 192.168.23.254 "
-            "ipv6.method manual ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984/64 "  # noqa: E501
-            "ipv6.gateway 2a02:ed0:52fe:ec00::/56"
+            "ipv6.method manual ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "  # noqa: E501
+            "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (
             0,
             "",
@@ -823,6 +823,6 @@ class TestNmcliDummyConnection(NmcliConnectionType):
             ipv4_addr="192.168.23.2",
             ipv4_gw="192.168.23.254",
             ipv6_method="manual",
-            ipv6_addr="2a02:ed0:52fe:ec00:dc3f:f939:a573:5984/64",
-            ipv6_gw="2a02:ed0:52fe:ec00::/56"
+            ipv6_addr="2a02:ed0:52fe:ec00:dc3f:f939:a573:5984",
+            ipv6_gw="2a02:ed0:52fe:ec00::"
         )

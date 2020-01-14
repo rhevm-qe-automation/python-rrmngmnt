@@ -6,6 +6,8 @@ NetworkManager.
 import logging
 import shlex
 
+import netaddr
+
 from rrmngmnt.errors import CommandExecutionFailure
 from rrmngmnt.service import Service
 
@@ -247,7 +249,9 @@ class NMCLI(Service):
 
         Raises:
             CommandExecutionFailure: if the remote host returned a code
-            indicating a failure in execution.
+                indicating a failure in execution.
+            InvalidMACException: if an invalid MAC address was passed.
+            InvalidIPException: if an invalid IP address was passed.
         """
         common_options = self._generate_common_options(
             con_type="ethernet",
@@ -260,24 +264,19 @@ class NMCLI(Service):
         command = NMCLI_CONNECTION_ADD + " " + common_options
 
         if mac:
+            if not self._is_mac_valid(mac_address=mac):
+                raise InvalidMACException(mac=mac)
             command += " mac {mac}".format(mac=mac)
-        if mtu:
-            command += " mtu {mtu}".format(mtu=mtu)
 
-        if ipv4_method:
-            command += " " + self._generate_ip_options(
-                ip_method=ipv4_method,
-                address=ipv4_addr,
-                gateway=ipv4_gw,
-                version=4
-            )
-        if ipv6_method:
-            command += " " + self._generate_ip_options(
-                ip_method=ipv6_method,
-                address=ipv6_addr,
-                gateway=ipv6_gw,
-                version=6
-            )
+        command += self._extend_add_command(
+            ipv4_addr=ipv4_addr,
+            ipv4_gw=ipv4_gw,
+            ipv4_method=ipv4_method,
+            ipv6_addr=ipv6_addr,
+            ipv6_gw=ipv6_gw,
+            ipv6_method=ipv6_method,
+            mtu=mtu
+        )
 
         self._exec_command(command=command)
 
@@ -349,20 +348,15 @@ class NMCLI(Service):
                 + type_options
         )
 
-        if ipv4_method:
-            command += " " + self._generate_ip_options(
-                ip_method=ipv4_method,
-                address=ipv4_addr,
-                gateway=ipv4_gw,
-                version=4
-            )
-        if ipv6_method:
-            command += " " + self._generate_ip_options(
-                ip_method=ipv6_method,
-                address=ipv6_addr,
-                gateway=ipv6_gw,
-                version=6
-            )
+        command += self._extend_add_command(
+            ipv4_addr=ipv4_addr,
+            ipv4_gw=ipv4_gw,
+            ipv4_method=ipv4_method,
+            ipv6_addr=ipv6_addr,
+            ipv6_gw=ipv6_gw,
+            ipv6_method=ipv6_method,
+            mtu=0
+        )
 
         self._exec_command(command=command)
 
@@ -467,22 +461,15 @@ class NMCLI(Service):
                 + " id {id}".format(id=vlan_id)
         )
 
-        if mtu:
-            command += " mtu {mtu}".format(mtu=mtu)
-        if ipv4_method:
-            command += " " + self._generate_ip_options(
-                ip_method=ipv4_method,
-                address=ipv4_addr,
-                gateway=ipv4_gw,
-                version=4
-            )
-        if ipv6_method:
-            command += " " + self._generate_ip_options(
-                ip_method=ipv6_method,
-                address=ipv6_addr,
-                gateway=ipv6_gw,
-                version=6
-            )
+        command += self._extend_add_command(
+            ipv4_addr=ipv4_addr,
+            ipv4_gw=ipv4_gw,
+            ipv4_method=ipv4_method,
+            ipv6_addr=ipv6_addr,
+            ipv6_gw=ipv6_gw,
+            ipv6_method=ipv6_method,
+            mtu=mtu
+        )
 
         self._exec_command(command=command)
 
@@ -532,20 +519,15 @@ class NMCLI(Service):
 
         command = NMCLI_CONNECTION_ADD + " " + common_options
 
-        if ipv4_method:
-            command += " " + self._generate_ip_options(
-                ip_method=ipv4_method,
-                address=ipv4_addr,
-                gateway=ipv4_gw,
-                version=4
-            )
-        if ipv6_method:
-            command += " " + self._generate_ip_options(
-                ip_method=ipv6_method,
-                address=ipv6_addr,
-                gateway=ipv6_gw,
-                version=6
-            )
+        command += self._extend_add_command(
+            ipv4_addr=ipv4_addr,
+            ipv4_gw=ipv4_gw,
+            ipv4_method=ipv4_method,
+            ipv6_addr=ipv6_addr,
+            ipv6_gw=ipv6_gw,
+            ipv6_method=ipv6_method,
+            mtu=0
+        )
 
         self._exec_command(command=command)
 
@@ -566,6 +548,66 @@ class NMCLI(Service):
             )
         else:
             raise ConnectionDoesNotExistException(connection)
+
+    def _extend_add_command(
+            self,
+            ipv4_addr,
+            ipv4_gw,
+            ipv4_method,
+            ipv6_addr,
+            ipv6_gw,
+            ipv6_method,
+            mtu
+    ):
+        """
+        Extends a connection adding command with optional parameters.
+
+        Args:
+            ipv4_addr (str): a static address.
+            ipv4_gw (str): a gateway address.
+            ipv4_method (str): setting method.
+                Available methods: auto, disabled, link-local, manual, shared.
+            ipv6_addr (str): a static address.
+            ipv6_gw (str): a gateway address.
+            ipv6_method (str): setting method.
+                Available methods: auto, dhcp, disabled, ignore, link-local,
+                manual, shared.
+            mtu (int): MTU to set for the connection.
+
+        Returns:
+            str: an nmcli connection add command with the passed in optional
+                parameters.
+        """
+        command = ""
+        if mtu:
+            command += " mtu {mtu}".format(mtu=mtu)
+        if ipv4_addr:
+            if not self._is_ip_valid(ip_address=ipv4_addr):
+                raise InvalidIPException(ip=ipv4_addr)
+        if ipv4_gw:
+            if not self._is_ip_valid(ip_address=ipv4_gw):
+                raise InvalidIPException(ip=ipv4_gw)
+        if ipv6_addr:
+            if not self._is_ip_valid(ip_address=ipv6_addr):
+                raise InvalidIPException(ip=ipv6_addr)
+        if ipv6_gw:
+            if not self._is_ip_valid(ip_address=ipv6_gw):
+                raise InvalidIPException(ip=ipv6_gw)
+        if ipv4_method:
+            command += " " + self._generate_ip_options(
+                ip_method=ipv4_method,
+                address=ipv4_addr,
+                gateway=ipv4_gw,
+                version=4
+            )
+        if ipv6_method:
+            command += " " + self._generate_ip_options(
+                ip_method=ipv6_method,
+                address=ipv6_addr,
+                gateway=ipv6_gw,
+                version=6
+            )
+        return command
 
     @staticmethod
     def _generate_common_options(
@@ -634,6 +676,58 @@ class NMCLI(Service):
                     )
         return ip_options
 
+    @staticmethod
+    def _is_mac_valid(mac_address):
+        """
+        Checks if a given MAC address is valid.
+
+        Args:
+            mac_address (str): MAC address.
+
+        Returns:
+            bool: True if the MAC address is valid, or False if not.
+        """
+        try:
+            netaddr.EUI(addr=mac_address)
+        except netaddr.AddrFormatError:
+            return False
+        return True
+
+    @staticmethod
+    def _is_ip_valid(ip_address):
+        """
+        Checks if a given IP address is valid.
+
+        Args:
+            ip_address (str): IP address.
+
+        Returns:
+            bool: True if the MAC address is valid, or False if not.
+        """
+        try:
+            netaddr.IPAddress(addr=ip_address)
+        except netaddr.AddrFormatError:
+            return False
+        return True
+
+    def get_ip_version(self, ip_address):
+        """
+        Gets the IP version of an IP address.
+
+        Args:
+            ip_address (str): IP address.
+
+        Returns:
+            int: the IP version.
+
+        Raises:
+            InvalidIPException: if the ip_address parameter does not represent
+                a valid IP address.
+        """
+        if self._is_ip_valid(ip_address=ip_address):
+            return netaddr.IPAddress(addr=ip_address).version
+        raise InvalidIPException(ip_address)
+
 
 class ConnectionDoesNotExistException(Exception):
     def __init__(self, con_name):
@@ -651,3 +745,21 @@ class DeviceDoesNotExistException(Exception):
 
     def __str__(self):
         return "device {dev} does not exist".format(dev=self.device)
+
+
+class InvalidIPException(Exception):
+    def __init__(self, ip):
+        super(InvalidIPException, self).__init__(ip)
+        self.ip = ip
+
+    def __str__(self):
+        return "IP address {addr} is in-valid".format(addr=self.ip)
+
+
+class InvalidMACException(Exception):
+    def __init__(self, mac):
+        super(InvalidMACException, self).__init__(mac)
+        self.mac = mac
+
+    def __str__(self):
+        return "MAC address {addr} is in-valid".format(addr=self.mac)

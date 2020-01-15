@@ -142,10 +142,12 @@ class Network(Service):
         super(Network, self).__init__(host)
         self._m = _session(host)
         self._hnh = None
-        self._nmcli = NMCLI(host)
+        self._nmcli = None
 
     @property
     def nmcli(self):
+        if self.nmcli is None:
+            self._nmcli = NMCLI(self.host)
         return self._nmcli
 
     @keep_session

@@ -31,9 +31,7 @@ DEFAULT_BOND_MODE = "active-backup"
 
 DEFAULT_MIIMON = 100
 
-ERROR_MSG_FORMAT = (
-    "command -> {command}\nRC -> {rc}\nOUT -> {out}\nERROR -> {err}"
-)
+ERROR_MSG_FORMAT = "command -> {command}\nRC -> {rc}\nOUT -> {out}\nERROR -> {err}"  # noqa: E501
 
 NMCLI_COMMAND = "nmcli {options} {object} {command}"
 NMCLI_CONNECTION_DELETE = "nmcli connection delete {id}"
@@ -46,6 +44,7 @@ class NMCLI(Service):
     """
     This class implements network operations using nmcli.
     """
+
     def __init__(self, host):
         super(NMCLI, self).__init__(host)
         self._executor = host.executor()
@@ -70,17 +69,10 @@ class NMCLI(Service):
 
         if rc != 0:
             logger.error(
-                ERROR_MSG_FORMAT.format(
-                    command=command,
-                    rc=rc,
-                    out=out,
-                    err=err)
+                ERROR_MSG_FORMAT.format(command=command, rc=rc, out=out, err=err)  # noqa: E501
             )
             raise CommandExecutionFailure(
-                executor=self._executor,
-                cmd=split,
-                rc=rc,
-                err=err
+                executor=self._executor, cmd=split, rc=rc, err=err
             )
         return out
 
@@ -130,14 +122,11 @@ class NMCLI(Service):
             indicating a failure in execution.
         """
         command = NMCLI_COMMAND.format(
-            options="-m multiline",
-            object="connection",
-            command="show"
+            options="-m multiline", object="connection", command="show"
         )
         out = self._exec_command(command=command)
         con_names = [
-            line.strip("NAME:").strip() for line in out.splitlines()
-            if "NAME:" in line
+            line.strip("NAME:").strip() for line in out.splitlines() if "NAME:" in line  # noqa: E501
         ]
         return [self.get_connection_uuid(con_name=name) for name in con_names]
 
@@ -160,7 +149,7 @@ class NMCLI(Service):
                 command=NMCLI_COMMAND.format(
                     options="-g connection.uuid",
                     object="connection",
-                    command="show {con}".format(con=con_name)
+                    command="show {con}".format(con=con_name),
                 )
             ).strip()
         raise ConnectionDoesNotExistException(con_name)
@@ -183,7 +172,7 @@ class NMCLI(Service):
             command=NMCLI_COMMAND.format(
                 options="-g GENERAL.TYPE",
                 object="device",
-                command="show {device}".format(device=device)
+                command="show {device}".format(device=device),
             )
         ).strip()
 
@@ -200,29 +189,26 @@ class NMCLI(Service):
             ConnectionDoesNotExistException: if a connection with the given
             name does not exist.
         """
-        command = "nmcli connection {state} {con}".format(
-            state=state,
-            con=connection
-        )
+        command = "nmcli connection {state} {con}".format(state=state, con=connection)  # noqa: E501
         if self.is_connection_exist(connection=connection):
             self._exec_command(command=command)
         else:
             raise ConnectionDoesNotExistException(connection)
 
     def add_ethernet(
-            self,
-            con_name,
-            ifname,
-            auto_connect=False,
-            save=False,
-            mac=None,
-            mtu=None,
-            ipv4_method=None,
-            ipv4_addr=None,
-            ipv4_gw=None,
-            ipv6_method=None,
-            ipv6_addr=None,
-            ipv6_gw=None
+        self,
+        con_name,
+        ifname,
+        auto_connect=False,
+        save=False,
+        mac=None,
+        mtu=None,
+        ipv4_method=None,
+        ipv4_addr=None,
+        ipv4_gw=None,
+        ipv6_method=None,
+        ipv6_addr=None,
+        ipv6_gw=None,
     ):
         """
         Creates an ETHERNET connection.
@@ -256,7 +242,7 @@ class NMCLI(Service):
             con_name=con_name,
             ifname=ifname,
             auto_connect=auto_connect,
-            save=save
+            save=save,
         )
 
         command = NMCLI_CONNECTION_ADD + " " + common_options
@@ -273,25 +259,25 @@ class NMCLI(Service):
             ipv6_addr=ipv6_addr,
             ipv6_gw=ipv6_gw,
             ipv6_method=ipv6_method,
-            mtu=mtu
+            mtu=mtu,
         )
 
         self._exec_command(command=command)
 
     def add_bond(
-            self,
-            con_name,
-            ifname,
-            mode=DEFAULT_BOND_MODE,
-            miimon=DEFAULT_MIIMON,
-            auto_connect=False,
-            save=False,
-            ipv4_method=None,
-            ipv4_addr=None,
-            ipv4_gw=None,
-            ipv6_method=None,
-            ipv6_addr=None,
-            ipv6_gw=None
+        self,
+        con_name,
+        ifname,
+        mode=DEFAULT_BOND_MODE,
+        miimon=DEFAULT_MIIMON,
+        auto_connect=False,
+        save=False,
+        ipv4_method=None,
+        ipv4_addr=None,
+        ipv4_gw=None,
+        ipv6_method=None,
+        ipv6_addr=None,
+        ipv6_gw=None,
     ):
         """
         Creates a bond connection.
@@ -331,20 +317,12 @@ class NMCLI(Service):
             con_name=con_name,
             ifname=ifname,
             auto_connect=auto_connect,
-            save=save
+            save=save,
         )
 
-        type_options = "mode {mode} miimon {miimon}".format(
-            mode=mode, miimon=miimon
-        )
+        type_options = "mode {mode} miimon {miimon}".format(mode=mode, miimon=miimon)  # noqa: E501
 
-        command = (
-                NMCLI_CONNECTION_ADD
-                + " "
-                + common_options
-                + " "
-                + type_options
-        )
+        command = NMCLI_CONNECTION_ADD + " " + common_options + " " + type_options  # noqa: E501
 
         command += self._extend_add_command(
             ipv4_addr=ipv4_addr,
@@ -353,19 +331,12 @@ class NMCLI(Service):
             ipv6_addr=ipv6_addr,
             ipv6_gw=ipv6_gw,
             ipv6_method=ipv6_method,
-            mtu=0
+            mtu=0,
         )
 
         self._exec_command(command=command)
 
-    def add_slave(
-            self,
-            con_name,
-            ifname,
-            master,
-            auto_connect=False,
-            save=False
-    ):
+    def add_slave(self, con_name, ifname, master, auto_connect=False, save=False):  # noqa: E501
         """
         Creates a bond slave.
 
@@ -388,32 +359,32 @@ class NMCLI(Service):
             con_name=con_name,
             ifname=ifname,
             auto_connect=auto_connect,
-            save=save
+            save=save,
         )
 
         command = (
-                NMCLI_CONNECTION_ADD
-                + " "
-                + common_options
-                + " master {master}".format(master=master)
+            NMCLI_CONNECTION_ADD
+            + " "
+            + common_options
+            + " master {master}".format(master=master)
         )
 
         self._exec_command(command=command)
 
     def add_vlan(
-            self,
-            con_name,
-            dev,
-            vlan_id,
-            auto_connect=False,
-            save=False,
-            mtu=None,
-            ipv4_method=None,
-            ipv4_addr=None,
-            ipv4_gw=None,
-            ipv6_method=None,
-            ipv6_addr=None,
-            ipv6_gw=None
+        self,
+        con_name,
+        dev,
+        vlan_id,
+        auto_connect=False,
+        save=False,
+        mtu=None,
+        ipv4_method=None,
+        ipv4_addr=None,
+        ipv4_gw=None,
+        ipv6_method=None,
+        ipv6_addr=None,
+        ipv6_gw=None,
     ):
         """
         Creates a VLAN connection.
@@ -448,15 +419,15 @@ class NMCLI(Service):
             con_name=con_name,
             ifname=dev,
             auto_connect=auto_connect,
-            save=save
+            save=save,
         )
 
         command = (
-                NMCLI_CONNECTION_ADD
-                + " "
-                + common_options
-                + " dev {dev}".format(dev=dev)
-                + " id {id}".format(id=vlan_id)
+            NMCLI_CONNECTION_ADD
+            + " "
+            + common_options
+            + " dev {dev}".format(dev=dev)
+            + " id {id}".format(id=vlan_id)
         )
 
         command += self._extend_add_command(
@@ -466,23 +437,23 @@ class NMCLI(Service):
             ipv6_addr=ipv6_addr,
             ipv6_gw=ipv6_gw,
             ipv6_method=ipv6_method,
-            mtu=mtu
+            mtu=mtu,
         )
 
         self._exec_command(command=command)
 
     def add_dummy(
-            self,
-            con_name,
-            ifname,
-            auto_connect=False,
-            save=False,
-            ipv4_method=None,
-            ipv4_addr=None,
-            ipv4_gw=None,
-            ipv6_method=None,
-            ipv6_addr=None,
-            ipv6_gw=None
+        self,
+        con_name,
+        ifname,
+        auto_connect=False,
+        save=False,
+        ipv4_method=None,
+        ipv4_addr=None,
+        ipv4_gw=None,
+        ipv6_method=None,
+        ipv6_addr=None,
+        ipv6_gw=None,
     ):
         """
         Creates a dummy connection.
@@ -512,7 +483,7 @@ class NMCLI(Service):
             con_name=con_name,
             ifname=ifname,
             auto_connect=auto_connect,
-            save=save
+            save=save,
         )
 
         command = NMCLI_CONNECTION_ADD + " " + common_options
@@ -524,7 +495,7 @@ class NMCLI(Service):
             ipv6_addr=ipv6_addr,
             ipv6_gw=ipv6_gw,
             ipv6_method=ipv6_method,
-            mtu=0
+            mtu=0,
         )
 
         self._exec_command(command=command)
@@ -571,21 +542,12 @@ class NMCLI(Service):
                 name does not exist.
         """
         if self.is_connection_exist(connection=connection):
-            self._exec_command(
-                command=NMCLI_CONNECTION_DELETE.format(id=connection)
-            )
+            self._exec_command(command=NMCLI_CONNECTION_DELETE.format(id=connection))  # noqa: E501
         else:
             raise ConnectionDoesNotExistException(connection)
 
     def _extend_add_command(
-        self,
-        ipv4_addr,
-        ipv4_gw,
-        ipv4_method,
-        ipv6_addr,
-        ipv6_gw,
-        ipv6_method,
-        mtu
+        self, ipv4_addr, ipv4_gw, ipv4_method, ipv6_addr, ipv6_gw, ipv6_method, mtu  # noqa: E501
     ):
         """
         Extends a connection adding command with optional parameters.
@@ -623,28 +585,16 @@ class NMCLI(Service):
                 raise InvalidIPException(ip=ipv6_gw)
         if ipv4_method:
             command += " " + self._generate_ip_options(
-                ip_method=ipv4_method,
-                address=ipv4_addr,
-                gateway=ipv4_gw,
-                version=4
+                ip_method=ipv4_method, address=ipv4_addr, gateway=ipv4_gw, version=4  # noqa: E501
             )
         if ipv6_method:
             command += " " + self._generate_ip_options(
-                ip_method=ipv6_method,
-                address=ipv6_addr,
-                gateway=ipv6_gw,
-                version=6
+                ip_method=ipv6_method, address=ipv6_addr, gateway=ipv6_gw, version=6  # noqa: E501
             )
         return command
 
     @staticmethod
-    def _generate_common_options(
-            con_type,
-            con_name,
-            ifname,
-            auto_connect,
-            save
-    ):
+    def _generate_common_options(con_type, con_name, ifname, auto_connect, save):  # noqa: E501
         """
         Generates a string containing common options for the nmcli tool.
 
@@ -664,7 +614,7 @@ class NMCLI(Service):
             con_name=con_name,
             ifname=ifname,
             auto_connect="yes" if auto_connect else "no",
-            save="yes" if save else "no"
+            save="yes" if save else "no",
         )
 
     @staticmethod
@@ -686,21 +636,16 @@ class NMCLI(Service):
 
         if ip_method:
             ip_options += (
-                IPV4_METHOD.format(method=ip_method) if version == 4
+                IPV4_METHOD.format(method=ip_method)
+                if version == 4
                 else IPV6_METHOD.format(method=ip_method)
             )
             if ip_method == IP_MANUAL_METHOD:
                 if address and gateway:
                     ip_options += " " + (
-                        IPV4_STATIC.format(
-                            address=address,
-                            gateway=gateway
-                        )
+                        IPV4_STATIC.format(address=address, gateway=gateway)
                         if version == 4
-                        else IPV6_STATIC.format(
-                            address=address,
-                            gateway=gateway
-                        )
+                        else IPV6_STATIC.format(address=address, gateway=gateway)  # noqa: E501
                     )
         return ip_options
 
@@ -754,7 +699,6 @@ class NMCLI(Service):
         """
         if self._is_ip_valid(ip_address=ip_address):
             return netaddr.IPAddress(addr=ip_address).version
-
 
 
 class ConnectionDoesNotExistException(Exception):

@@ -146,7 +146,7 @@ class Network(Service):
 
     @property
     def nmcli(self):
-        if self.nmcli is None:
+        if self._nmcli is None:
             self._nmcli = NMCLI(self.host)
         return self._nmcli
 

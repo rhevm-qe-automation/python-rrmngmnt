@@ -580,16 +580,16 @@ class NMCLI(Service):
         if mtu:
             command += " mtu {mtu}".format(mtu=mtu)
         if ipv4_addr:
-            if not self._is_ip_valid(ip_address=ipv4_addr):
+            if not self._get_ip_version(ip_address=ipv4_addr) == 4:
                 raise InvalidIPException(ip=ipv4_addr)
         if ipv4_gw:
-            if not self._is_ip_valid(ip_address=ipv4_gw):
+            if not self._get_ip_version(ip_address=ipv4_gw) == 4:
                 raise InvalidIPException(ip=ipv4_gw)
         if ipv6_addr:
-            if not self._is_ip_valid(ip_address=ipv6_addr):
+            if not self._get_ip_version(ip_address=ipv6_addr) == 6:
                 raise InvalidIPException(ip=ipv6_addr)
         if ipv6_gw:
-            if not self._is_ip_valid(ip_address=ipv6_gw):
+            if not self._get_ip_version(ip_address=ipv6_gw) == 6:
                 raise InvalidIPException(ip=ipv6_gw)
         if ipv4_method:
             command += " " + self._generate_ip_options(
@@ -708,7 +708,7 @@ class NMCLI(Service):
             return False
         return True
 
-    def get_ip_version(self, ip_address):
+    def _get_ip_version(self, ip_address):
         """
         Gets the IP version of an IP address.
 
@@ -724,7 +724,7 @@ class NMCLI(Service):
         """
         if self._is_ip_valid(ip_address=ip_address):
             return netaddr.IPAddress(addr=ip_address).version
-        raise InvalidIPException(ip_address)
+
 
 
 class ConnectionDoesNotExistException(Exception):
@@ -760,4 +760,4 @@ class InvalidMACException(Exception):
         self.mac = mac
 
     def __str__(self):
-        return "MAC address {addr} is in-valid".format(addr=self.mac)
+        return "MAC address {addr} is invalid".format(addr=self.mac)

@@ -3,12 +3,11 @@
 This module introduces support for the nmcli command which is provided by
 NetworkManager.
 """
-import logging
 import shlex
 
 import netaddr
 
-from rrmngmnt.errors import CommandExecutionFailure
+from rrmngmnt.errors import CommandExecutionFailure, GeneralResourceError
 from rrmngmnt.service import Service
 
 IPV4_STATIC = "ipv4.addresses {address} ipv4.gateway {gateway}"
@@ -36,8 +35,6 @@ ERROR_MSG_FORMAT = "command -> {command}\nRC -> {rc}\nOUT -> {out}\nERROR -> {er
 NMCLI_COMMAND = "nmcli {options} {object} {command}"
 NMCLI_CONNECTION_DELETE = "nmcli connection delete {id}"
 NMCLI_CONNECTION_ADD = "nmcli connection add"
-
-logger = logging.getLogger(__name__)
 
 
 class NMCLI(Service):
@@ -68,7 +65,7 @@ class NMCLI(Service):
         rc, out, err = self._executor.run_cmd(split)
 
         if rc != 0:
-            logger.error(
+            self.logger.error(
                 ERROR_MSG_FORMAT.format(command=command, rc=rc, out=out, err=err)  # noqa: E501
             )
             raise CommandExecutionFailure(
@@ -701,7 +698,7 @@ class NMCLI(Service):
             return netaddr.IPAddress(addr=ip_address).version
 
 
-class ConnectionDoesNotExistException(Exception):
+class ConnectionDoesNotExistException(GeneralResourceError):
     def __init__(self, con_name):
         super(ConnectionDoesNotExistException, self).__init__(con_name)
         self.con_name = con_name
@@ -710,7 +707,7 @@ class ConnectionDoesNotExistException(Exception):
         return "connection {con} does not exist".format(con=self.con_name)
 
 
-class DeviceDoesNotExistException(Exception):
+class DeviceDoesNotExistException(GeneralResourceError):
     def __init__(self, device):
         super(DeviceDoesNotExistException, self).__init__(device)
         self.device = device
@@ -719,7 +716,7 @@ class DeviceDoesNotExistException(Exception):
         return "device {dev} does not exist".format(dev=self.device)
 
 
-class InvalidIPException(Exception):
+class InvalidIPException(GeneralResourceError):
     def __init__(self, ip):
         super(InvalidIPException, self).__init__(ip)
         self.ip = ip
@@ -728,7 +725,7 @@ class InvalidIPException(Exception):
         return "IP address {addr} is in-valid".format(addr=self.ip)
 
 
-class InvalidMACException(Exception):
+class InvalidMACException(GeneralResourceError):
     def __init__(self, mac):
         super(InvalidMACException, self).__init__(mac)
         self.mac = mac

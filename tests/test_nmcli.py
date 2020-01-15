@@ -164,6 +164,21 @@ class TestNmcliSanity(NmcliBase):
             "",
             "Error: unknown connection 'ovirtmgmtt'."
         ),
+        "nmcli connection modify ovirtmgmt autoconnect yes": (
+            0,
+            "",
+            ""
+        ),
+        "nmcli connection modify ovirtmgmt autoconnectt yes": (
+            10,
+            "",
+            ""
+        ),
+        "nmcli connection modify ovirtmgmtt autoconnect yes": (
+            10,
+            "",
+            "Error: unknown connection 'ovirtmgmtt'."
+        ),
     }
 
     def test_check_connection_exists(self, mock):
@@ -242,6 +257,31 @@ class TestNmcliSanity(NmcliBase):
         ):
             mock.network.nmcli.set_connection_state(
                 connection="ovirtmgmtt", state="down"
+            )
+
+    def test_modify_connection_autoconnect(self, mock):
+        mock.network.nmcli.modify_connection(
+            connection="ovirtmgmt",
+            properties={"autoconnect": "yes"}
+        )
+
+    def test_modify_connection_with_illegal_property(self, mock):
+        with pytest.raises(
+            expected_exception=CommandExecutionFailure
+        ):
+            mock.network.nmcli.modify_connection(
+                connection="ovirtmgmt",
+                properties={"autoconnectt": "yes"}
+            )
+
+    def test_modify_non_existing_connection(self, mock):
+        with pytest.raises(
+            expected_exception=ConnectionDoesNotExistException,
+            match="connection ovirtmgmtt does not exist"
+        ):
+            mock.network.nmcli.modify_connection(
+                connection="ovirtmgmtt",
+                properties={"autoconnect": "yes"}
             )
 
     def test_delete_connection(self, mock):

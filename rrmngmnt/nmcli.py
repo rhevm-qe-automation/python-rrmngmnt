@@ -531,6 +531,36 @@ class NMCLI(Service):
 
         self._exec_command(command=command)
 
+    def modify_connection(self, connection, properties):
+        """
+        Modifies a connection.
+
+        Args:
+            connection (str): name, UUID or path.
+            properties (dict): properties mapping to values
+
+        Raises:
+            ConnectionDoesNotExistException: if a connection with the given
+                name does not exist.
+            CommandExecutionFailure: if the remote host returned a code
+                indicating a failure in execution.
+
+        Notes:
+            For multi-value properties e.g: ipv4.addresses, it is possible to
+            pass a property key with a '+' prefix to append a value e.g:
+            {"+ipv4.addresses": "192.168.23.2"}, or a '-' in order to remove
+            a property.
+        """
+        if not self.is_connection_exist(connection=connection):
+            raise ConnectionDoesNotExistException(connection)
+
+        command = "nmcli connection modify {con}".format(con=connection)
+
+        for prop, val in properties.items():
+            command += " " + prop + " " + val
+
+        self._exec_command(command=command)
+
     def delete_connection(self, connection):
         """
         Deletes a connection.
@@ -540,7 +570,7 @@ class NMCLI(Service):
 
         Raises:
             ConnectionDoesNotExistException: if a connection with the given
-            name does not exist.
+                name does not exist.
         """
         if self.is_connection_exist(connection=connection):
             self._exec_command(
@@ -550,14 +580,14 @@ class NMCLI(Service):
             raise ConnectionDoesNotExistException(connection)
 
     def _extend_add_command(
-            self,
-            ipv4_addr,
-            ipv4_gw,
-            ipv4_method,
-            ipv6_addr,
-            ipv6_gw,
-            ipv6_method,
-            mtu
+        self,
+        ipv4_addr,
+        ipv4_gw,
+        ipv4_method,
+        ipv6_addr,
+        ipv6_gw,
+        ipv6_method,
+        mtu
     ):
         """
         Extends a connection adding command with optional parameters.

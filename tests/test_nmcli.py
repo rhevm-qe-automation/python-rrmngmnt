@@ -727,8 +727,17 @@ class TestNmcliVlanConnection(NmcliConnectionTypeIPConfigurable):
         ): (0, "", ""),
         (
             "nmcli con add "
+            "type vlan con-name vlan_con ifname enp8s0f0 dev enp8s0f0 id 163"
+        ): (0, "", ""),
+        (
+            "nmcli con add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "autoconnect yes id 163 dev enp8s0f0"
+        ): (0, "", ""),
+        (
+            "nmcli con add "
+            "type vlan con-name vlan_con ifname enp8s0f0 "
+            "autoconnect yes dev enp8s0f0 id 163"
         ): (0, "", ""),
         (
             "nmcli con add "
@@ -738,7 +747,21 @@ class TestNmcliVlanConnection(NmcliConnectionTypeIPConfigurable):
         (
             "nmcli con add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
+            "save yes dev enp8s0f0 id 163"
+        ): (0, "", ""),
+        (
+            "nmcli con add "
+            "type vlan con-name vlan_con ifname enp8s0f0 "
             "id 163 dev enp8s0f0 "
+            "ipv4.method manual ipv6.method manual "
+            "ipv4.addresses 192.168.23.2 ipv4.gateway 192.168.23.254 "
+            "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "
+            "ipv6.gateway 2a02:ed0:52fe:ec00::"
+        ): (0, "", ""),
+        (
+            "nmcli con add "
+            "type vlan con-name vlan_con ifname enp8s0f0 "
+            "dev enp8s0f0 id 163 "
             "ipv4.method manual ipv6.method manual "
             "ipv4.addresses 192.168.23.2 ipv4.gateway 192.168.23.254 "
             "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "
@@ -756,7 +779,25 @@ class TestNmcliVlanConnection(NmcliConnectionTypeIPConfigurable):
         (
             "nmcli con add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
+            "dev enp8s0f0 id 163 "
+            "ipv4.method manual ipv6.method manual "
+            "ipv4.addresses 192.168.23.2.2 ipv4.gateway 192.168.23.254 "
+            "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "
+            "ipv6.gateway 2a02:ed0:52fe:ec00::"
+        ): (10, "", ""),
+        (
+            "nmcli con add "
+            "type vlan con-name vlan_con ifname enp8s0f0 "
             "id 163 dev enp8s0f0 "
+            "ipv4.method manual ipv6.method manual ipv4.addresses 192.168.23.2 "  # noqa: E501
+            "ipv4.gateway 192.168.23.254.2 "
+            "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "
+            "ipv6.gateway 2a02:ed0:52fe:ec00::"
+        ): (10, "", ""),
+        (
+            "nmcli con add "
+            "type vlan con-name vlan_con ifname enp8s0f0 "
+            "dev enp8s0f0 id 163 "
             "ipv4.method manual ipv6.method manual ipv4.addresses 192.168.23.2 "  # noqa: E501
             "ipv4.gateway 192.168.23.254.2 "
             "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "
@@ -774,7 +815,25 @@ class TestNmcliVlanConnection(NmcliConnectionTypeIPConfigurable):
         (
             "nmcli con add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
+            "dev enp8s0f0 id 163 "
+            "ipv4.method manual ipv6.method manual ipv4.addresses 192.168.23.2 "  # noqa: E501
+            "ipv4.gateway 192.168.23.254 "
+            "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573 "
+            "ipv6.gateway 2a02:ed0:52fe:ec00::"
+        ): (10, "", ""),
+        (
+            "nmcli con add "
+            "type vlan con-name vlan_con ifname enp8s0f0 "
             "id 163 dev enp8s0f0 "
+            "ipv4.method manual ipv6.method manual ipv4.addresses 192.168.23.2 "  # noqa: E501
+            "ipv4.gateway 192.168.23.254 "
+            "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "
+            "ipv6.gateway 2a02:ed0:52fe:ec00:"
+        ): (10, "", ""),
+        (
+            "nmcli con add "
+            "type vlan con-name vlan_con ifname enp8s0f0 "
+            "dev enp8s0f0 id 163 "
             "ipv4.method manual ipv6.method manual ipv4.addresses 192.168.23.2 "  # noqa: E501
             "ipv4.gateway 192.168.23.254 "
             "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "
@@ -785,6 +844,21 @@ class TestNmcliVlanConnection(NmcliConnectionTypeIPConfigurable):
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "id 163 dev enp8s0f0 mtu 1600"
         ): (0, "", ""),
+        (
+            "nmcli con add "
+            "type vlan con-name vlan_con ifname enp8s0f0 "
+            "dev enp8s0f0 id 163 mtu 1600"
+        ): (0, "", ""),
+        (
+            "nmcli con add "
+            "type vlan con-name vlan_con ifname enp8s0f0 "
+            "dev enp8s0f0 mtu 1600 id 163"
+        ): (0, "", ""),
+        (
+            "nmcli con add "
+            "type vlan con-name vlan_con ifname enp8s0f0 "
+            "mtu 1600 dev enp8s0f0 id 163"
+        ): (0, "", ""),
         "nmcli device show enp8s0f0": (0, "ethernet", ""),
         "nmcli device show enp8s0f00": (
             10,
@@ -793,6 +867,8 @@ class TestNmcliVlanConnection(NmcliConnectionTypeIPConfigurable):
         ),
         "nmcli con add type vlan con-name vlan_con ifname enp8s0f00 "
         "id 163 dev enp8s0f00": (10, "", ""),
+        "nmcli con add type vlan con-name vlan_con ifname enp8s0f00 "
+        "dev enp8s0f00 id 163": (10, "", ""),
     }
 
     def test_add_connection_defaults(self, mock):

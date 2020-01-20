@@ -859,6 +859,11 @@ class TestNmcliVlanConnection(NmcliConnectionTypeIPConfigurable):
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "mtu 1600 dev enp8s0f0 id 163"
         ): (0, "", ""),
+        (
+            "nmcli con add "
+            "type vlan con-name vlan_con ifname enp8s0f0 "
+            "id 163 mtu 1600 dev enp8s0f0"
+        ): (0, "", ""),
         "nmcli device show enp8s0f0": (0, "ethernet", ""),
         "nmcli device show enp8s0f00": (
             10,

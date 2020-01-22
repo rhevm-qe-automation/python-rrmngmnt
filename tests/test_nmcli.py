@@ -52,8 +52,8 @@ class TestNmcliSanity(NmcliBase):
     """
 
     data = {
-        "nmcli con show ovirtmgmt": (0, "", ""),
-        "nmcli con show ovirtmgmtt": (
+        "nmcli connection show ovirtmgmt": (0, "", ""),
+        "nmcli connection show ovirtmgmtt": (
             10,
             "",
             "Error: ovirtmgmtt - no such connection profile.",
@@ -114,12 +114,14 @@ class TestNmcliSanity(NmcliBase):
         ),
         "nmcli connection up ovirtmgmt": (
             0,
-            "Connection successfully activated (D-Bus active path: /org/freedesktop/NetworkManager/ActiveConnection/1985)",  # noqa: E501
+            "Connection successfully activated (D-Bus active path: "
+            "/org/freedesktop/NetworkManager/ActiveConnection/1985)",
             "",
         ),
         "nmcli connection down ovirtmgmt": (
             0,
-            "Connection successfully terminated (D-Bus active path: /org/freedesktop/NetworkManager/ActiveConnection/1985)",  # noqa: E501
+            "Connection successfully terminated (D-Bus active path: "
+            "/org/freedesktop/NetworkManager/ActiveConnection/1985)",
             "",
         ),
         "nmcli connection up ovirtmgmtt": (
@@ -132,36 +134,25 @@ class TestNmcliSanity(NmcliBase):
             "",
             "Error: unknown connection 'ovirtmgmtt'.",
         ),
-        "nmcli con delete ovirtmgmt": (
+        "nmcli connection delete ovirtmgmt": (
             0,
-            "Connection successfully removed (D-Bus active path: /org/freedesktop/NetworkManager/ActiveConnection/1985)",  # noqa: E501
+            "Connection successfully removed (D-Bus active path: "
+            "/org/freedesktop/NetworkManager/ActiveConnection/1985)",
             "",
         ),
-        "nmcli con delete ovirtmgmtt": (
+        "nmcli connection delete ovirtmgmtt": (
             10,
             "",
             "Error: unknown connection 'ovirtmgmtt'.",
         ),
-        "nmcli con modify ovirtmgmt autoconnect yes": (0, "", ""),
-        "nmcli con modify ovirtmgmt autoconnectt yes": (10, "", ""),
-        "nmcli con modify ovirtmgmtt autoconnect yes": (
+        "nmcli connection modify ovirtmgmt autoconnect yes": (0, "", ""),
+        "nmcli connection modify ovirtmgmt autoconnectt yes": (10, "", ""),
+        "nmcli connection modify ovirtmgmtt autoconnect yes": (
             10,
             "",
             "Error: unknown connection 'ovirtmgmtt'.",
         ),
     }
-
-    def test_get_device_type(self, mock):
-        assert (
-            mock.network.nmcli.get_device_type(device="enp8s0f0") == "ethernet"
-        )
-
-    def test_get_non_existing_device_type(self, mock):
-        with pytest.raises(
-            expected_exception=CommandExecutionFailure,
-            match="Error: Device 'enp8s0f00' not found.",
-        ):
-            mock.network.nmcli.get_device_type(device="enp8s0f00")
 
     def test_set_connection_up(self, mock):
         mock.network.nmcli.set_connection_state(
@@ -265,92 +256,100 @@ class TestNmcliEthernetConnection(NmcliConnectionTypeIPConfigurable):
 
     data = {
         (
-            "nmcli con add type ethernet con-name ethernet_con ifname enp8s0f0"
-        ): (
-            0,
-            "",
-            "",
-        ),
-        (
-            "nmcli con add "
-            "type ethernet con-name ethernet_con ifname enp8s0f0 autoconnect yes"  # noqa: E501
+            "nmcli connection add type ethernet con-name ethernet_con ifname "
+            "enp8s0f0"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
+            "type ethernet con-name ethernet_con ifname enp8s0f0 autoconnect "
+            "yes"
+        ): (0, "", ""),
+        (
+            "nmcli connection add "
             "type ethernet con-name ethernet_con ifname enp8s0f0 save yes"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type ethernet con-name ethernet_con ifname enp8s0f0 "
-            "ipv4.method manual ipv6.method manual ipv4.addresses 192.168.23.2 "  # noqa: E501
+            "ipv4.method manual ipv6.method manual "
+            "ipv4.addresses 192.168.23.2 "
             "ipv4.gateway 192.168.23.254 "
             "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "
             "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type ethernet con-name ethernet_con ifname enp8s0f0 "
-            "ipv4.method manual ipv6.method manual ipv4.addresses 192.168.23.2.2 "  # noqa: E501
+            "ipv4.method manual ipv6.method manual "
+            "ipv4.addresses 192.168.23.2.2 "
             "ipv4.gateway 192.168.23.254 "
             "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "
             "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (
             10,
             "",
-            "Error: failed to modify ipv4.addresses: invalid IP address: Invalid IPv4 address '192.186.23.2.2'.",  # noqa: E501
+            "Error: failed to modify ipv4.addresses: invalid IP address: "
+            "Invalid IPv4 address '192.186.23.2.2'.",
         ),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type ethernet con-name ethernet_con ifname enp8s0f0 "
-            "ipv4.method manual ipv6.method manual ipv4.addresses 192.168.23.2 "  # noqa: E501
+            "ipv4.method manual ipv6.method manual "
+            "ipv4.addresses 192.168.23.2 "
             "ipv4.gateway 192.168.23.254 "
             "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573 "
             "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (
             10,
             "",
-            "Error: failed to modify ipv6.addresses: invalid IP address: Invalid IPv6 address '2a02:ed0:52fe:ec00:dc3f:f939:a573'.",  # noqa: E501
+            "Error: failed to modify ipv6.addresses: invalid IP address: "
+            "Invalid IPv6 address '2a02:ed0:52fe:ec00:dc3f:f939:a573'.",
         ),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type ethernet con-name ethernet_con ifname enp8s0f0 "
-            "ipv4.method manual ipv6.method manual ipv4.addresses 192.168.23.2 "  # noqa: E501
+            "ipv4.method manual ipv6.method manual "
+            "ipv4.addresses 192.168.23.2 "
             "ipv4.gateway 192.168.23.254.2 "
             "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "
             "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (
             10,
             "",
-            "Error: failed to modify ipv4.gateway: invalid IP address: Invalid IPv4 address '192.168.23.254.2'.",  # noqa: E501
+            "Error: failed to modify ipv4.gateway: invalid IP address: "
+            "Invalid IPv4 address '192.168.23.254.2'.",
         ),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type ethernet con-name ethernet_con ifname enp8s0f0 "
-            "ipv4.method manual ipv6.method manual ipv4.addresses 192.168.23.2 "  # noqa: E501
+            "ipv4.method manual ipv6.method manual "
+            "ipv4.addresses 192.168.23.2 "
             "ipv4.gateway 192.168.23.254 "
             "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "
             "ipv6.gateway 2a02:ed0:52fe:ec00:"
         ): (
             10,
             "",
-            "Error: failed to modify ipv6.gateway: invalid IP address: Invalid IPv6 address '2a02:ed0:52fe:ec00:'.",  # noqa: E501
+            "Error: failed to modify ipv6.gateway: invalid IP address: "
+            "Invalid IPv6 address '2a02:ed0:52fe:ec00:'.",
         ),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type ethernet con-name ethernet_con ifname enp8s0f0 "
             "mac e8:6a:64:7d:d3:b1"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type ethernet con-name ethernet_con ifname enp8s0f0 "
             "mac e8:6a:64:7d:d3"
         ): (
             10,
             "",
-            "Error: failed to modify 802-3-ethernet.mac-address: 'e8:6a:64:7d:d3' is not a valid Ethernet MAC.",  # noqa: E501
+            "Error: failed to modify 802-3-ethernet.mac-address: "
+            "'e8:6a:64:7d:d3' is not a valid Ethernet MAC.",
         ),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type ethernet con-name ethernet_con ifname enp8s0f0 "
             "mtu 1600"
         ): (0, "", ""),
@@ -358,22 +357,22 @@ class TestNmcliEthernetConnection(NmcliConnectionTypeIPConfigurable):
 
     def test_add_connection_defaults(self, mock):
         mock.network.nmcli.add_ethernet_connection(
-            con_name="ethernet_con", ifname="enp8s0f0"
+            name="ethernet_con", ifname="enp8s0f0"
         )
 
     def test_add_connection_with_autoconnect(self, mock):
         mock.network.nmcli.add_ethernet_connection(
-            con_name="ethernet_con", ifname="enp8s0f0", auto_connect=True
+            name="ethernet_con", ifname="enp8s0f0", auto_connect=True
         )
 
     def test_add_connection_with_save(self, mock):
         mock.network.nmcli.add_ethernet_connection(
-            con_name="ethernet_con", ifname="enp8s0f0", save=True
+            name="ethernet_con", ifname="enp8s0f0", save=True
         )
 
     def test_add_connection_with_static_ips(self, mock):
         mock.network.nmcli.add_ethernet_connection(
-            con_name="ethernet_con",
+            name="ethernet_con",
             ifname="enp8s0f0",
             ipv4_method="manual",
             ipv4_addr="192.168.23.2",
@@ -386,10 +385,12 @@ class TestNmcliEthernetConnection(NmcliConnectionTypeIPConfigurable):
     def test_add_connection_with_invalid_ipv4_address(self, mock):
         with pytest.raises(
             expected_exception=CommandExecutionFailure,
-            match=".*Error: failed to modify ipv4.addresses: invalid IP address: Invalid IPv4 address '192.186.23.2.2'..*",  # noqa: E501
+            match=".*Error: failed to modify ipv4.addresses: "
+                  "invalid IP address: "
+                  "Invalid IPv4 address '192.186.23.2.2'..*",
         ):
             mock.network.nmcli.add_ethernet_connection(
-                con_name="ethernet_con",
+                name="ethernet_con",
                 ifname="enp8s0f0",
                 ipv4_method="manual",
                 ipv4_addr="192.168.23.2.2",
@@ -402,10 +403,13 @@ class TestNmcliEthernetConnection(NmcliConnectionTypeIPConfigurable):
     def test_add_connection_with_invalid_ipv6_address(self, mock):
         with pytest.raises(
             expected_exception=CommandExecutionFailure,
-            match=".*Error: failed to modify ipv6.addresses: invalid IP address: Invalid IPv6 address '2a02:ed0:52fe:ec00:dc3f:f939:a573'..*",  # noqa: E501
+            match=".*Error: failed to modify ipv6.addresses: "
+                  "invalid IP address: "
+                  "Invalid IPv6 address "
+                  "'2a02:ed0:52fe:ec00:dc3f:f939:a573'..*",
         ):
             mock.network.nmcli.add_ethernet_connection(
-                con_name="ethernet_con",
+                name="ethernet_con",
                 ifname="enp8s0f0",
                 ipv4_method="manual",
                 ipv4_addr="192.168.23.2",
@@ -418,10 +422,12 @@ class TestNmcliEthernetConnection(NmcliConnectionTypeIPConfigurable):
     def test_add_connection_with_invalid_ipv4_gateway(self, mock):
         with pytest.raises(
             expected_exception=CommandExecutionFailure,
-            match=".*Error: failed to modify ipv4.gateway: invalid IP address: Invalid IPv4 address '192.168.23.254.2'.*",  # noqa: E501
+            match=".*Error: failed to modify ipv4.gateway: "
+                  "invalid IP address: "
+                  "Invalid IPv4 address '192.168.23.254.2'.*",
         ):
             mock.network.nmcli.add_ethernet_connection(
-                con_name="ethernet_con",
+                name="ethernet_con",
                 ifname="enp8s0f0",
                 ipv4_method="manual",
                 ipv4_addr="192.168.23.2",
@@ -434,10 +440,12 @@ class TestNmcliEthernetConnection(NmcliConnectionTypeIPConfigurable):
     def test_add_connection_with_invalid_ipv6_gateway(self, mock):
         with pytest.raises(
             expected_exception=CommandExecutionFailure,
-            match=".*Error: failed to modify ipv6.gateway: invalid IP address: Invalid IPv6 address '2a02:ed0:52fe:ec00:'..*",  # noqa: E501
+            match=".*Error: failed to modify ipv6.gateway: "
+                  "invalid IP address: "
+                  "Invalid IPv6 address '2a02:ed0:52fe:ec00:'..*",
         ):
             mock.network.nmcli.add_ethernet_connection(
-                con_name="ethernet_con",
+                name="ethernet_con",
                 ifname="enp8s0f0",
                 ipv4_method="manual",
                 ipv4_addr="192.168.23.2",
@@ -449,23 +457,22 @@ class TestNmcliEthernetConnection(NmcliConnectionTypeIPConfigurable):
 
     def test_add_ethernet_with_mac(self, mock):
         mock.network.nmcli.add_ethernet_connection(
-            con_name="ethernet_con", ifname="enp8s0f0", mac="e8:6a:64:7d:d3:b1"
+            name="ethernet_con", ifname="enp8s0f0", mac="e8:6a:64:7d:d3:b1"
         )
 
     def test_add_ethernet_with_invalid_mac(self, mock):
         with pytest.raises(
             expected_exception=CommandExecutionFailure,
-            match=".*Error: failed to modify 802-3-ethernet.mac-address: 'e8:6a:64:7d:d3' is not a valid Ethernet MAC..*",  # noqa: E501
+            match=".*Error: failed to modify 802-3-ethernet.mac-address: "
+                  "'e8:6a:64:7d:d3' is not a valid Ethernet MAC..*",
         ):
             mock.network.nmcli.add_ethernet_connection(
-                con_name="ethernet_con",
-                ifname="enp8s0f0",
-                mac="e8:6a:64:7d:d3",
+                name="ethernet_con", ifname="enp8s0f0", mac="e8:6a:64:7d:d3"
             )
 
     def test_add_ethernet_with_mtu(self, mock):
         mock.network.nmcli.add_ethernet_connection(
-            con_name="ethernet_con", ifname="enp8s0f0", mtu=1600
+            name="ethernet_con", ifname="enp8s0f0", mtu=1600
         )
 
 
@@ -475,25 +482,20 @@ class TestNmcliBondConnection(NmcliConnectionTypeIPConfigurable):
     """
 
     data = {
-        "nmcli con add " "type bond con-name bond_con ifname bond0": (
-            0,
-            "",
-            "",
-        ),
+        "nmcli connection add "
+        "type bond con-name bond_con ifname bond0": (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type bond con-name bond_con ifname bond0 "
             "autoconnect yes"
         ): (0, "", ""),
         (
-            "nmcli con add " "type bond con-name bond_con ifname bond0 " "save yes"  # noqa: E501
-        ): (
-            0,
-            "",
-            "",
-        ),
+            "nmcli connection add "
+            "type bond con-name bond_con ifname bond0 "
+            "save yes"
+        ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type bond con-name bond_con ifname bond0 "
             "ipv4.method manual ipv6.method manual "
             "ipv4.addresses 192.168.23.2 ipv4.gateway 192.168.23.254 "
@@ -501,7 +503,7 @@ class TestNmcliBondConnection(NmcliConnectionTypeIPConfigurable):
             "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type bond con-name bond_con ifname bond0 "
             "ipv4.method manual ipv6.method manual "
             "ipv4.addresses 192.168.23.2.2 ipv4.gateway 192.168.23.254 "
@@ -509,7 +511,7 @@ class TestNmcliBondConnection(NmcliConnectionTypeIPConfigurable):
             "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (10, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type bond con-name bond_con ifname bond0 "
             "ipv4.method manual ipv6.method manual "
             "ipv4.addresses 192.168.23.2 ipv4.gateway 192.168.23.254.2 "
@@ -517,7 +519,7 @@ class TestNmcliBondConnection(NmcliConnectionTypeIPConfigurable):
             "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (10, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type bond con-name bond_con ifname bond0 "
             "ipv4.method manual ipv6.method manual "
             "ipv4.addresses 192.168.23.2 ipv4.gateway 192.168.23.254 "
@@ -525,7 +527,7 @@ class TestNmcliBondConnection(NmcliConnectionTypeIPConfigurable):
             "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (10, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type bond con-name bond_con ifname bond0 "
             "ipv4.method manual ipv6.method manual "
             "ipv4.addresses 192.168.23.2 ipv4.gateway 192.168.23.254 "
@@ -533,39 +535,39 @@ class TestNmcliBondConnection(NmcliConnectionTypeIPConfigurable):
             "ipv6.gateway 2a02:ed0:52fe:ec00:"
         ): (10, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type bond con-name bond_con ifname bond0 "
             "mode balance-rr"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type bond con-name bond_con ifname bond0 "
             "mode active-backup"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type bond con-name bond_con ifname bond0 "
             "mode balance-xor"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type bond con-name bond_con ifname bond0 "
             "mode broadcast"
         ): (0, "", ""),
-        "nmcli con add "
+        "nmcli connection add "
         "type bond con-name bond_con ifname bond0 "
         "mode 802.3ad": (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type bond con-name bond_con ifname bond0 "
             "mode balance-tlb"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type bond con-name bond_con ifname bond0 "
             "mode balance-alb"
         ): (0, "", ""),
-        "nmcli con add "
+        "nmcli connection add "
         "type bond con-name bond_con ifname bond0 "
         "miimon 50": (0, "", ""),
     }
@@ -677,16 +679,16 @@ class TestNmcliSlaveConnection(NmcliConnectionTypeBase):
 
     data = {
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type ethernet con-name bond0_slave ifname enp8s0f0 master bond0"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type ethernet con-name bond0_slave ifname enp8s0f0 "
             "autoconnect yes master bond0"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type ethernet con-name bond0_slave ifname enp8s0f0 "
             "save yes master bond0"
         ): (0, "", ""),
@@ -695,12 +697,16 @@ class TestNmcliSlaveConnection(NmcliConnectionTypeBase):
 
     def test_add_connection_defaults(self, mock):
         mock.network.nmcli.add_slave(
-            con_name="bond0_slave", ifname="enp8s0f0", master="bond0"
+            con_name="bond0_slave",
+            slave_type="ethernet",
+            ifname="enp8s0f0",
+            master="bond0",
         )
 
     def test_add_connection_with_autoconnect(self, mock):
         mock.network.nmcli.add_slave(
             con_name="bond0_slave",
+            slave_type="ethernet",
             ifname="enp8s0f0",
             master="bond0",
             auto_connect=True,
@@ -709,6 +715,7 @@ class TestNmcliSlaveConnection(NmcliConnectionTypeBase):
     def test_add_connection_with_save(self, mock):
         mock.network.nmcli.add_slave(
             con_name="bond0_slave",
+            slave_type="ethernet",
             ifname="enp8s0f0",
             master="bond0",
             save=True,
@@ -722,35 +729,35 @@ class TestNmcliVlanConnection(NmcliConnectionTypeIPConfigurable):
 
     data = {
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type vlan con-name vlan_con ifname enp8s0f0 id 163 dev enp8s0f0"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type vlan con-name vlan_con ifname enp8s0f0 dev enp8s0f0 id 163"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "autoconnect yes id 163 dev enp8s0f0"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "autoconnect yes dev enp8s0f0 id 163"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "save yes id 163 dev enp8s0f0"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "save yes dev enp8s0f0 id 163"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "id 163 dev enp8s0f0 "
             "ipv4.method manual ipv6.method manual "
@@ -759,7 +766,7 @@ class TestNmcliVlanConnection(NmcliConnectionTypeIPConfigurable):
             "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "dev enp8s0f0 id 163 "
             "ipv4.method manual ipv6.method manual "
@@ -768,7 +775,7 @@ class TestNmcliVlanConnection(NmcliConnectionTypeIPConfigurable):
             "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "id 163 dev enp8s0f0 "
             "ipv4.method manual ipv6.method manual "
@@ -777,7 +784,7 @@ class TestNmcliVlanConnection(NmcliConnectionTypeIPConfigurable):
             "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (10, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "dev enp8s0f0 id 163 "
             "ipv4.method manual ipv6.method manual "
@@ -786,86 +793,92 @@ class TestNmcliVlanConnection(NmcliConnectionTypeIPConfigurable):
             "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (10, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "id 163 dev enp8s0f0 "
-            "ipv4.method manual ipv6.method manual ipv4.addresses 192.168.23.2 "  # noqa: E501
+            "ipv4.method manual ipv6.method manual "
+            "ipv4.addresses 192.168.23.2 "
             "ipv4.gateway 192.168.23.254.2 "
             "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "
             "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (10, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "dev enp8s0f0 id 163 "
-            "ipv4.method manual ipv6.method manual ipv4.addresses 192.168.23.2 "  # noqa: E501
+            "ipv4.method manual ipv6.method manual "
+            "ipv4.addresses 192.168.23.2 "
             "ipv4.gateway 192.168.23.254.2 "
             "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "
             "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (10, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "id 163 dev enp8s0f0 "
-            "ipv4.method manual ipv6.method manual ipv4.addresses 192.168.23.2 "  # noqa: E501
+            "ipv4.method manual ipv6.method manual "
+            "ipv4.addresses 192.168.23.2 "
             "ipv4.gateway 192.168.23.254 "
             "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573 "
             "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (10, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "dev enp8s0f0 id 163 "
-            "ipv4.method manual ipv6.method manual ipv4.addresses 192.168.23.2 "  # noqa: E501
+            "ipv4.method manual ipv6.method manual "
+            "ipv4.addresses 192.168.23.2 "
             "ipv4.gateway 192.168.23.254 "
             "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573 "
             "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (10, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "id 163 dev enp8s0f0 "
-            "ipv4.method manual ipv6.method manual ipv4.addresses 192.168.23.2 "  # noqa: E501
+            "ipv4.method manual ipv6.method manual "
+            "ipv4.addresses 192.168.23.2 "
             "ipv4.gateway 192.168.23.254 "
             "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "
             "ipv6.gateway 2a02:ed0:52fe:ec00:"
         ): (10, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "dev enp8s0f0 id 163 "
-            "ipv4.method manual ipv6.method manual ipv4.addresses 192.168.23.2 "  # noqa: E501
+            "ipv4.method manual ipv6.method manual "
+            "ipv4.addresses 192.168.23.2 "
             "ipv4.gateway 192.168.23.254 "
             "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "
             "ipv6.gateway 2a02:ed0:52fe:ec00:"
         ): (10, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "id 163 dev enp8s0f0 mtu 1600"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "mtu 1600 id 163 dev enp8s0f0"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "dev enp8s0f0 id 163 mtu 1600"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "dev enp8s0f0 mtu 1600 id 163"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "mtu 1600 dev enp8s0f0 id 163"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type vlan con-name vlan_con ifname enp8s0f0 "
             "id 163 mtu 1600 dev enp8s0f0"
         ): (0, "", ""),
@@ -875,9 +888,9 @@ class TestNmcliVlanConnection(NmcliConnectionTypeIPConfigurable):
             "",
             "Error: Device 'enp8s0f00' not found.",
         ),
-        "nmcli con add type vlan con-name vlan_con ifname enp8s0f00 "
+        "nmcli connection add type vlan con-name vlan_con ifname enp8s0f00 "
         "id 163 dev enp8s0f00": (10, "", ""),
-        "nmcli con add type vlan con-name vlan_con ifname enp8s0f00 "
+        "nmcli connection add type vlan con-name vlan_con ifname enp8s0f00 "
         "dev enp8s0f00 id 163": (10, "", ""),
     }
 
@@ -983,52 +996,57 @@ class TestNmcliDummyConnection(NmcliConnectionTypeIPConfigurable):
     """
 
     data = {
-        "nmcli con add "
+        "nmcli connection add "
         "type dummy con-name dummy_con ifname dummy_0": (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type dummy con-name dummy_con ifname dummy_0 "
             "autoconnect yes"
         ): (0, "", ""),
-        "nmcli con add "
+        "nmcli connection add "
         "type dummy con-name dummy_con ifname dummy_0 "
         "save yes": (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type dummy con-name dummy_con ifname dummy_0 "
-            "ipv4.method manual ipv6.method manual ipv4.addresses 192.168.23.2 "  # noqa: E501
+            "ipv4.method manual ipv6.method manual "
+            "ipv4.addresses 192.168.23.2 "
             "ipv4.gateway 192.168.23.254 "
             "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "
             "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (0, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type dummy con-name dummy_con ifname dummy_0 "
-            "ipv4.method manual ipv6.method manual ipv4.addresses 192.168.23.2.2 "  # noqa: E501
+            "ipv4.method manual ipv6.method manual "
+            "ipv4.addresses 192.168.23.2.2 "
             "ipv4.gateway 192.168.23.254 "
             "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "
             "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (10, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type dummy con-name dummy_con ifname dummy_0 "
-            "ipv4.method manual ipv6.method manual ipv4.addresses 192.168.23.2 "  # noqa: E501
+            "ipv4.method manual ipv6.method manual "
+            "ipv4.addresses 192.168.23.2 "
             "ipv4.gateway 192.168.23.254.2 "
             "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "
             "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (10, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type dummy con-name dummy_con ifname dummy_0 "
-            "ipv4.method manual ipv6.method manual ipv4.addresses 192.168.23.2 "  # noqa: E501
+            "ipv4.method manual ipv6.method manual "
+            "ipv4.addresses 192.168.23.2 "
             "ipv4.gateway 192.168.23.254 "
             "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573 "
             "ipv6.gateway 2a02:ed0:52fe:ec00::"
         ): (10, "", ""),
         (
-            "nmcli con add "
+            "nmcli connection add "
             "type dummy con-name dummy_con ifname dummy_0 "
-            "ipv4.method manual ipv6.method manual ipv4.addresses 192.168.23.2 "  # noqa: E501
+            "ipv4.method manual ipv6.method manual "
+            "ipv4.addresses 192.168.23.2 "
             "ipv4.gateway 192.168.23.254 "
             "ipv6.addresses 2a02:ed0:52fe:ec00:dc3f:f939:a573:5984 "
             "ipv6.gateway 2a02:ed0:52fe:ec00:"

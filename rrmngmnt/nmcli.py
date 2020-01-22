@@ -8,9 +8,71 @@ import shlex
 from rrmngmnt.errors import CommandExecutionFailure
 from rrmngmnt.service import Service
 
-ERROR_MSG_FORMAT = "command -> {command}\nRC -> {rc}\nOUT -> {out}\nERROR -> {err}"  # noqa: E501
+ERROR_MSG_FORMAT = (
+    "command -> {command}\nRC -> {rc}\nOUT -> {out}\nERROR -> {err}"
+)
 
-NMCLI_COMMAND = "nmcli {options} {object} {command}"
+
+class Objects:
+    CONNECTION = "connection"
+    DEVICE = "device"
+
+
+class Operations:
+    ADD = "add"
+    MODIFY = "modify"
+    DELETE = "delete"
+    SHOW = "show"
+
+
+class NmGeneralSettings:
+    _prefix = "GENERAL.{setting}"
+    DEVICE = _prefix.format(setting="DEVICE")
+    TYPE = _prefix.format(setting="TYPE")
+    MAC = _prefix.format(setting="HWADDR")
+    MTU = _prefix.format(setting="MTU")
+
+
+class ObjectDetails:
+    NAME = "name"
+    TYPE = "type"
+
+
+class ConnectionDetails(ObjectDetails):
+    UUID = "uuid"
+    DEVICE = "device"
+
+
+class DeviceDetails(ObjectDetails):
+    MAC = "mac"
+    MTU = "mtu"
+
+
+class Types:
+    ETHERNET = "ethernet"
+    BOND = "bond"
+    VLAN = "vlan"
+    DUMMY = "dummy"
+
+
+class EthernetOptions:
+    MAC = "mac"
+    MTU = "mtu"
+
+
+class BondOptions:
+    MODE = "mode"
+    MIIMON = "miimon"
+
+
+class SlaveOptions:
+    MASTER = "master"
+
+
+class VlanOptions:
+    DEV = "dev"
+    ID = "id"
+    MTU = "mtu"
 
 NMCLI_CONNECTION_DELETE = "nmcli connection delete {id}"
 
@@ -46,7 +108,9 @@ class NMCLI(Service):
 
         if rc != 0:
             self.logger.error(
-                ERROR_MSG_FORMAT.format(command=command, rc=rc, out=out, err=err)  # noqa: E501
+                ERROR_MSG_FORMAT.format(
+                    command=command, rc=rc, out=out, err=err
+                )
             )
             raise CommandExecutionFailure(
                 executor=self._executor, cmd=split, rc=rc, err=err
@@ -69,21 +133,25 @@ class NMCLI(Service):
             CommandExecutionFailure: if the remote host returned a code
             indicating a failure in execution.
         """
-        cons = list()
+        connections = []
 
-        out = self._exec_command(command="nmcli -t con show")
+        out = self._exec_command(
+            command="nmcli -t {obj} {operation}".format(
+                obj=Objects.CONNECTION, operation=Operations.SHOW
+            )
+        )
         for line in out.splitlines():
             properties = line.split(":")
-            cons.append(
+            connections.append(
                 {
-                    "name": properties[0],
-                    "uuid": properties[1],
-                    "type": properties[2],
-                    "device": properties[3],
+                    ConnectionDetails.NAME: properties[0],
+                    ConnectionDetails.UUID: properties[1],
+                    ConnectionDetails.TYPE: properties[2],
+                    ConnectionDetails.DEVICE: properties[3],
                 }
             )
 
-        return cons
+        return connections
 
     def get_all_devices(self):
         """
@@ -97,46 +165,61 @@ class NMCLI(Service):
                     - "mac"
                     - "mtu"
         """
-        devices = list()
-        con_names = [con.get("name") for con in self.get_all_connections()]
+        devices = []
+        connections_names = [
+            connection.get(ConnectionDetails.NAME)
+            for connection in self.get_all_connections()
+        ]
 
-        for name in con_names:
+        for name in connections_names:
             out = self._exec_command(
                 command=(
                     "nmcli -e no "
-                    "-g GENERAL.DEVICE,GENERAL.TYPE,GENERAL.HWADDR,GENERAL.MTU "  # noqa: E501
-                    "dev show {con}"
-                ).format(con=name)
+                    "-g {name},{type},{mac},{mtu} "
+                    "{obj} {operation} {device}"
+                ).format(
+                    name=NmGeneralSettings.DEVICE,
+                    type=NmGeneralSettings.TYPE,
+                    mac=NmGeneralSettings.MAC,
+                    mtu=NmGeneralSettings.MTU,
+                    obj=Objects.DEVICE,
+                    operation=Operations.SHOW,
+                    device=name,
+                )
             )
             properties = out.splitlines()
             devices.append(
                 {
-                    "name": properties[0],
-                    "type": properties[1],
-                    "mac": properties[2],
-                    "mtu": properties[3],
+                    DeviceDetails.NAME: properties[0],
+                    DeviceDetails.TYPE: properties[1],
+                    DeviceDetails.MAC: properties[2],
+                    DeviceDetails.MTU: properties[3],
                 }
             )
 
         return devices
 
-    def get_device_type(self, device):
+    def get_device(self, name):
         """
-        Gets the device type.
+        Gets a device's details.
 
         Args:
-            device (str): device name.
+            name (str): device name.
 
         Returns:
-            str: the device type.
-
-        Raises:
-            CommandExecutionFailure: if the remote host returned a code
-            indicating a failure in execution.
+            dict: device details. contains the following keys:
+                - "name"
+                - "type"
+                - "mac"
+                - "mtu"
         """
-        return self._exec_command(
-            command="nmcli -g GENERAL.TYPE device show {dev}".format(dev=device)  # noqa: E501
-        ).strip()
+        devices = self.get_all_devices()
+        device = [
+            device
+            for device in devices
+            if device.get(DeviceDetails.NAME) == name
+        ]
+        return device[0] if device else {}
 
     def set_connection_state(self, connection, state):
         """
@@ -152,12 +235,14 @@ class NMCLI(Service):
             indicating a failure in execution.
         """
         self._exec_command(
-            command="nmcli connection {state} {con}".format(state=state, con=connection)  # noqa: E501
+            command="nmcli {obj} {state} {connection}".format(
+                obj=Objects.CONNECTION, state=state, connection=connection
+            )
         )
 
     def add_ethernet_connection(
         self,
-        con_name,
+        name,
         ifname,
         auto_connect=None,
         save=None,
@@ -174,7 +259,7 @@ class NMCLI(Service):
         Creates an ETHERNET connection.
 
         Args:
-            con_name (str): the created connection's name.
+            name (str): the created connection's name.
             ifname (str): the interface name to use.
             auto_connect (bool): True to connect automatically, or False for
                 manual.
@@ -197,27 +282,28 @@ class NMCLI(Service):
         """
         type_options = {}
         if mac:
-            type_options["mac"] = mac
+            type_options[EthernetOptions.MAC] = mac
         if mtu:
-            type_options["mtu"] = mtu
+            type_options[EthernetOptions.MTU] = mtu
 
-        command = self._nmcli_con_cmd_builder(
-            operation="add",
-            con_type="ethernet",
-            con_name=con_name,
-            ifname=ifname,
-            auto_connect=auto_connect,
-            save=save,
-            ipv4_method=ipv4_method,
-            ipv4_addr=ipv4_addr,
-            ipv4_gw=ipv4_gw,
-            ipv6_method=ipv6_method,
-            ipv6_addr=ipv6_addr,
-            ipv6_gw=ipv6_gw,
-            type_options=type_options,
+        self._exec_command(
+            command=self._nmcli_cmd_builder(
+                object_type=Objects.CONNECTION,
+                operation=Operations.ADD,
+                con_type=Types.ETHERNET,
+                name=name,
+                ifname=ifname,
+                auto_connect=auto_connect,
+                save=save,
+                ipv4_method=ipv4_method,
+                ipv4_addr=ipv4_addr,
+                ipv4_gw=ipv4_gw,
+                ipv6_method=ipv6_method,
+                ipv6_addr=ipv6_addr,
+                ipv6_gw=ipv6_gw,
+                type_options=type_options,
+            )
         )
-
-        self._exec_command(command=command)
 
     def add_bond(
         self,
@@ -269,34 +355,44 @@ class NMCLI(Service):
         """
         type_options = {}
         if mode:
-            type_options["mode"] = mode
+            type_options[BondOptions.MODE] = mode
         if miimon:
-            type_options["miimon"] = miimon
+            type_options[BondOptions.MIIMON] = miimon
 
-        command = self._nmcli_con_cmd_builder(
-            operation="add",
-            con_type="bond",
-            con_name=con_name,
-            ifname=ifname,
-            auto_connect=auto_connect,
-            save=save,
-            ipv4_method=ipv4_method,
-            ipv4_addr=ipv4_addr,
-            ipv4_gw=ipv4_gw,
-            ipv6_method=ipv6_method,
-            ipv6_addr=ipv6_addr,
-            ipv6_gw=ipv6_gw,
-            type_options=type_options,
+        self._exec_command(
+            command=self._nmcli_cmd_builder(
+                object_type=Objects.CONNECTION,
+                operation=Operations.ADD,
+                con_type=Types.BOND,
+                name=con_name,
+                ifname=ifname,
+                auto_connect=auto_connect,
+                save=save,
+                ipv4_method=ipv4_method,
+                ipv4_addr=ipv4_addr,
+                ipv4_gw=ipv4_gw,
+                ipv6_method=ipv6_method,
+                ipv6_addr=ipv6_addr,
+                ipv6_gw=ipv6_gw,
+                type_options=type_options,
+            )
         )
 
-        self._exec_command(command=command)
-
-    def add_slave(self, con_name, ifname, master, auto_connect=None, save=None):  # noqa: E501
+    def add_slave(
+        self,
+        con_name,
+        slave_type,
+        ifname,
+        master,
+        auto_connect=None,
+        save=None,
+    ):
         """
         Creates a bond slave.
 
         Args:
             con_name (str): the created connection's name.
+            slave_type (str): the type of slave device.
             ifname (str): the created bond's name.
             master (str): ifname, connection UUID or name.
             auto_connect (bool): True to connect automatically, or False for
@@ -307,20 +403,20 @@ class NMCLI(Service):
             CommandExecutionFailure: if the remote host returned a code
             indicating a failure in execution.
         """
-        slave_type = self.get_device_type(device=ifname)
-        type_options = {"master": master}
+        type_options = {SlaveOptions.MASTER: master}
 
-        command = self._nmcli_con_cmd_builder(
-            operation="add",
-            con_type=slave_type,
-            con_name=con_name,
-            ifname=ifname,
-            auto_connect=auto_connect,
-            save=save,
-            type_options=type_options,
+        self._exec_command(
+            command=self._nmcli_cmd_builder(
+                object_type=Objects.CONNECTION,
+                operation=Operations.ADD,
+                con_type=slave_type,
+                name=con_name,
+                ifname=ifname,
+                auto_connect=auto_connect,
+                save=save,
+                type_options=type_options,
+            )
         )
-
-        self._exec_command(command=command)
 
     def add_vlan(
         self,
@@ -362,27 +458,28 @@ class NMCLI(Service):
             CommandExecutionFailure: if the remote host returned a code
             indicating a failure in execution.
         """
-        type_options = {"dev": dev, "id": vlan_id}
+        type_options = {VlanOptions.DEV: dev, VlanOptions.ID: vlan_id}
         if mtu:
-            type_options["mtu"] = mtu
+            type_options[VlanOptions.MTU] = mtu
 
-        command = self._nmcli_con_cmd_builder(
-            operation="add",
-            con_type="vlan",
-            con_name=con_name,
-            ifname=dev,
-            auto_connect=auto_connect,
-            save=save,
-            ipv4_method=ipv4_method,
-            ipv4_addr=ipv4_addr,
-            ipv4_gw=ipv4_gw,
-            ipv6_method=ipv6_method,
-            ipv6_addr=ipv6_addr,
-            ipv6_gw=ipv6_gw,
-            type_options=type_options,
+        self._exec_command(
+            command=self._nmcli_cmd_builder(
+                object_type=Objects.CONNECTION,
+                operation=Operations.ADD,
+                con_type=Types.VLAN,
+                name=con_name,
+                ifname=dev,
+                auto_connect=auto_connect,
+                save=save,
+                ipv4_method=ipv4_method,
+                ipv4_addr=ipv4_addr,
+                ipv4_gw=ipv4_gw,
+                ipv6_method=ipv6_method,
+                ipv6_addr=ipv6_addr,
+                ipv6_gw=ipv6_gw,
+                type_options=type_options,
+            )
         )
-
-        self._exec_command(command=command)
 
     def add_dummy(
         self,
@@ -420,22 +517,23 @@ class NMCLI(Service):
             CommandExecutionFailure: if the remote host returned a code
             indicating a failure in execution.
         """
-        command = self._nmcli_con_cmd_builder(
-            operation="add",
-            con_type="dummy",
-            con_name=con_name,
-            ifname=ifname,
-            auto_connect=auto_connect,
-            save=save,
-            ipv4_method=ipv4_method,
-            ipv4_addr=ipv4_addr,
-            ipv4_gw=ipv4_gw,
-            ipv6_method=ipv6_method,
-            ipv6_addr=ipv6_addr,
-            ipv6_gw=ipv6_gw,
+        self._exec_command(
+            command=self._nmcli_cmd_builder(
+                object_type=Objects.CONNECTION,
+                operation=Operations.ADD,
+                con_type=Types.DUMMY,
+                name=con_name,
+                ifname=ifname,
+                auto_connect=auto_connect,
+                save=save,
+                ipv4_method=ipv4_method,
+                ipv4_addr=ipv4_addr,
+                ipv4_gw=ipv4_gw,
+                ipv6_method=ipv6_method,
+                ipv6_addr=ipv6_addr,
+                ipv6_gw=ipv6_gw,
+            )
         )
-
-        self._exec_command(command=command)
 
     def modify_connection(self, connection, properties):
         """
@@ -455,11 +553,14 @@ class NMCLI(Service):
             {"+ipv4.addresses": "192.168.23.2"}, or a '-' in order to remove
             a property.
         """
-        command = self._nmcli_con_cmd_builder(
-            operation="modify", con_name=connection, type_options=properties
+        self._exec_command(
+            command=self._nmcli_cmd_builder(
+                object_type=Objects.CONNECTION,
+                operation=Operations.MODIFY,
+                name=connection,
+                type_options=properties,
+            )
         )
-
-        self._exec_command(command=command)
 
     def delete_connection(self, connection):
         """
@@ -472,9 +573,13 @@ class NMCLI(Service):
             ConnectionDoesNotExistException: if a connection with the given
                 name does not exist.
         """
-        command = self._nmcli_con_cmd_builder(operation="delete", con_name=connection)  # noqa: E501
-
-        self._exec_command(command=command)
+        self._exec_command(
+            command=self._nmcli_cmd_builder(
+                object_type=Objects.CONNECTION,
+                operation=Operations.DELETE,
+                name=connection,
+            )
+        )
 
     def modify_device(self, device, properties):
         """
@@ -494,12 +599,14 @@ class NMCLI(Service):
             {"+ipv4.addresses": "192.168.23.2"}, or a '-' in order to remove
             a property.
         """
-        command = "nmcli dev modify {device}".format(device=device)
-
-        for k, v in properties.items():
-            command += " {k} {v}".format(k=k, v=v)
-
-        self._exec_command(command=command)
+        self._exec_command(
+            command=self._nmcli_cmd_builder(
+                object_type=Objects.DEVICE,
+                operation=Operations.MODIFY,
+                name=device,
+                type_options=properties,
+            )
+        )
 
     @staticmethod
     def _ip_options_builder(
@@ -530,11 +637,15 @@ class NMCLI(Service):
         if ipv6_method:
             command += " ipv6.method {method}".format(method=ipv6_method)
         if ipv4_addr:
-            command += " ipv4.addresses {ipv4_addr}".format(ipv4_addr=ipv4_addr)  # noqa: E501
+            command += " ipv4.addresses {ipv4_addr}".format(
+                ipv4_addr=ipv4_addr
+            )
         if ipv4_gw:
             command += " ipv4.gateway {ipv4_gw}".format(ipv4_gw=ipv4_gw)
         if ipv6_addr:
-            command += " ipv6.addresses {ipv6_addr}".format(ipv6_addr=ipv6_addr)  # noqa: E501
+            command += " ipv6.addresses {ipv6_addr}".format(
+                ipv6_addr=ipv6_addr
+            )
         if ipv6_gw:
             command += " ipv6.gateway {ipv6_gw}".format(ipv6_gw=ipv6_gw)
         return command
@@ -557,22 +668,32 @@ class NMCLI(Service):
         Returns:
             str: a common options string.
         """
+
+        def _get_str_value(value):
+            """
+            Returns the str representation of a bool value.
+            """
+            return "yes" if value is True else "no"
+
         common_options = (
             "type {type} " "con-name {con_name} " "ifname {ifname} "
         ).format(type=con_type, con_name=con_name, ifname=ifname)
         if auto_connect is not None:
-            common_options += "autoconnect {val}".format(
-                val="yes" if auto_connect is True else "no"
+            common_options += "autoconnect {value}".format(
+                value=_get_str_value(value=auto_connect)
             )
         if save is not None:
-            common_options += "save {val}".format(val="yes" if save is True else "no")  # noqa: E501
+            common_options += "save {value}".format(
+                value=_get_str_value(value=save)
+            )
 
         return common_options
 
-    def _nmcli_con_cmd_builder(
+    def _nmcli_cmd_builder(
         self,
+        object_type,
         operation,
-        con_name,
+        name,
         con_type=None,
         ifname=None,
         auto_connect=None,
@@ -589,8 +710,9 @@ class NMCLI(Service):
         Builds an nmcli command.
 
         Args:
+            object_type (str): "connection" / "device".
             operation (str): the operation to perform. e.g: "add", "delete" ...
-            con_name (str): the created connection's name.
+            name (str): connection/device name.
             con_type (str): the connection type. e.g: "ethernet", "bond" ...
             ifname (str): the interface name to use.
             auto_connect (bool): True to connect automatically, or False for
@@ -610,39 +732,37 @@ class NMCLI(Service):
         Returns:
             str: an nmcli command.
         """
-        command = "nmcli con {operation}".format(operation=operation, con=con_name)  # noqa: E501
+        command = "nmcli {object_type} {operation}".format(
+            object_type=object_type, operation=operation
+        )
 
-        if operation == "delete":
-            command += " {con}".format(con=con_name)
+        if operation == Operations.DELETE or operation == Operations.MODIFY:
+            command += " {connection}".format(connection=name)
 
-        elif operation == "modify":
-            command += " {con}".format(con=con_name)
-            if type_options:
-                for k, v in type_options.items():
-                    command += " {k} {v}".format(k=k, v=v)
-
-        elif operation == "add":
+        elif operation == Operations.ADD:
             command += " {common}".format(
                 common=self._common_options_builder(
                     con_type=con_type,
-                    con_name=con_name,
+                    con_name=name,
                     ifname=ifname,
                     auto_connect=auto_connect,
                     save=save,
                 )
             )
 
-            if type_options:
-                for k, v in type_options.items():
-                    command += " {k} {v}".format(k=k, v=v)
+        if type_options:
+            for _property, value in type_options.items():
+                command += " {_property} {value}".format(
+                    _property=_property, value=value
+                )
 
-            command += self._ip_options_builder(
-                ipv4_addr=ipv4_addr,
-                ipv4_gw=ipv4_gw,
-                ipv4_method=ipv4_method,
-                ipv6_addr=ipv6_addr,
-                ipv6_gw=ipv6_gw,
-                ipv6_method=ipv6_method,
-            )
+        command += self._ip_options_builder(
+            ipv4_addr=ipv4_addr,
+            ipv4_gw=ipv4_gw,
+            ipv4_method=ipv4_method,
+            ipv6_addr=ipv6_addr,
+            ipv6_gw=ipv6_gw,
+            ipv6_method=ipv6_method,
+        )
 
         return command

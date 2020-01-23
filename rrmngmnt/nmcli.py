@@ -672,14 +672,14 @@ class NMCLI(Service):
             return "yes" if value is True else "no"
 
         common_options = (
-            "type {type} " "con-name {con_name} " "ifname {ifname} "
+            "type {type} con-name {con_name} ifname {ifname}"
         ).format(type=con_type, con_name=con_name, ifname=ifname)
         if auto_connect is not None:
-            common_options += "autoconnect {value}".format(
+            common_options += " autoconnect {value}".format(
                 value=_get_str_value(value=auto_connect)
             )
         if save is not None:
-            common_options += "save {value}".format(
+            common_options += " save {value}".format(
                 value=_get_str_value(value=save)
             )
 

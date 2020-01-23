@@ -52,6 +52,20 @@ class TestNmcliSanity(NmcliBase):
     """
 
     data = {
+        "nmcli -t connection show": (
+            0,
+            "\n".join(
+                [
+                    "virbr0:ba7aafc8-438e-4f8d-9f6e-3991fecebac0:bridge:virbr0",
+                    "enp1s0f1:702b48ac-750f-4856-8124-c8c55d8e3dda:802-3-ethernet:",
+                    "enp2s0f0:d2ee2c05-b28f-4529-8f42-ea4dbb17f308:802-3-ethernet:",
+                    "enp2s0f1:98e5c49f-bd72-45b4-b377-bfb74b6665ca:802-3-ethernet:",
+                    "enp2s0f2:a7199332-f99d-4152-babd-79d37d53478c:802-3-ethernet:",
+                    "enp2s0f3:86dbb462-6404-4444-8f4b-b78d045f4c9d:802-3-ethernet:"
+                ]
+            ),
+            ""
+        ),
         "nmcli connection show ovirtmgmt": (0, "", ""),
         "nmcli connection show ovirtmgmtt": (
             10,
@@ -79,15 +93,18 @@ class TestNmcliSanity(NmcliBase):
             "\n".join(
                 [
                     "NAME:                                   ovirtmgmt",
-                    "UUID:                                   f142311f-9e79-4b9e-9d8a-f591e0cec44a",  # noqa: E501
+                    "UUID:                                   f142311f-9e79-4b9e-9d8a-f591e0cec44a",
+                    # noqa: E501
                     "TYPE:                                   bridge",
                     "DEVICE:                                 ovirtmgmt",
                     "NAME:                                   virbr0",
-                    "UUID:                                   56d36466-2a58-4461-98ba-fbe11700955a",  # noqa: E501
+                    "UUID:                                   56d36466-2a58-4461-98ba-fbe11700955a",
+                    # noqa: E501
                     "TYPE:                                   bridge",
                     "DEVICE:                                 virbr0",
                     "NAME:                                   enp8s0f0",
-                    "UUID:                                   f58d1962-459d-47de-b090-55091dd3d702",  # noqa: E501
+                    "UUID:                                   f58d1962-459d-47de-b090-55091dd3d702",
+                    # noqa: E501
                     "TYPE:                                   ethernet",
                     "DEVICE:                                 enp8s0f0",
                 ]
@@ -154,6 +171,38 @@ class TestNmcliSanity(NmcliBase):
         ),
     }
 
+    def test_get_all_connections(self, mock):
+        connections = mock.network.nmcli.get_all_connections()
+        assert (
+                connections
+                == [
+                    {'device': 'virbr0',
+                     'name': 'virbr0',
+                     'type': 'bridge',
+                     'uuid': 'ba7aafc8-438e-4f8d-9f6e-3991fecebac0'},
+                    {'device': '',
+                     'name': 'enp1s0f1',
+                     'type': '802-3-ethernet',
+                     'uuid': '702b48ac-750f-4856-8124-c8c55d8e3dda'},
+                    {'device': '',
+                     'name': 'enp2s0f0',
+                     'type': '802-3-ethernet',
+                     'uuid': 'd2ee2c05-b28f-4529-8f42-ea4dbb17f308'},
+                    {'device': '',
+                     'name': 'enp2s0f1',
+                     'type': '802-3-ethernet',
+                     'uuid': '98e5c49f-bd72-45b4-b377-bfb74b6665ca'},
+                    {'device': '',
+                     'name': 'enp2s0f2',
+                     'type': '802-3-ethernet',
+                     'uuid': 'a7199332-f99d-4152-babd-79d37d53478c'},
+                    {'device': '',
+                     'name': 'enp2s0f3',
+                     'type': '802-3-ethernet',
+                     'uuid': '86dbb462-6404-4444-8f4b-b78d045f4c9d'}
+                ]
+        )
+
     def test_set_connection_up(self, mock):
         mock.network.nmcli.set_connection_state(
             connection="ovirtmgmt", state="up"
@@ -166,8 +215,8 @@ class TestNmcliSanity(NmcliBase):
 
     def test_set_non_existing_connection_up(self, mock):
         with pytest.raises(
-            expected_exception=CommandExecutionFailure,
-            match=".*Error: unknown connection 'ovirtmgmtt'..*",
+                expected_exception=CommandExecutionFailure,
+                match=".*Error: unknown connection 'ovirtmgmtt'..*",
         ):
             mock.network.nmcli.set_connection_state(
                 connection="ovirtmgmtt", state="up"
@@ -175,8 +224,8 @@ class TestNmcliSanity(NmcliBase):
 
     def test_set_non_existing_connection_down(self, mock):
         with pytest.raises(
-            expected_exception=CommandExecutionFailure,
-            match=".*Error: unknown connection 'ovirtmgmtt'..*",
+                expected_exception=CommandExecutionFailure,
+                match=".*Error: unknown connection 'ovirtmgmtt'..*",
         ):
             mock.network.nmcli.set_connection_state(
                 connection="ovirtmgmtt", state="down"
@@ -195,8 +244,8 @@ class TestNmcliSanity(NmcliBase):
 
     def test_modify_non_existing_connection(self, mock):
         with pytest.raises(
-            expected_exception=CommandExecutionFailure,
-            match=".*Error: unknown connection 'ovirtmgmtt'..*",
+                expected_exception=CommandExecutionFailure,
+                match=".*Error: unknown connection 'ovirtmgmtt'..*",
         ):
             mock.network.nmcli.modify_connection(
                 connection="ovirtmgmtt", properties={"autoconnect": "yes"}
@@ -207,8 +256,8 @@ class TestNmcliSanity(NmcliBase):
 
     def test_delete_non_existing_connection(self, mock):
         with pytest.raises(
-            expected_exception=CommandExecutionFailure,
-            match=".*Error: unknown connection 'ovirtmgmtt'..*",
+                expected_exception=CommandExecutionFailure,
+                match=".*Error: unknown connection 'ovirtmgmtt'..*",
         ):
             mock.network.nmcli.delete_connection(connection="ovirtmgmtt")
 
@@ -410,10 +459,10 @@ class TestNmcliEthernetConnection(NmcliConnectionTypeIPConfigurable):
 
     def test_add_connection_with_invalid_ipv4_address(self, mock):
         with pytest.raises(
-            expected_exception=CommandExecutionFailure,
-            match=".*Error: failed to modify ipv4.addresses: "
-            "invalid IP address: "
-            "Invalid IPv4 address '192.186.23.2.2'..*",
+                expected_exception=CommandExecutionFailure,
+                match=".*Error: failed to modify ipv4.addresses: "
+                      "invalid IP address: "
+                      "Invalid IPv4 address '192.186.23.2.2'..*",
         ):
             mock.network.nmcli.add_ethernet_connection(
                 name="ethernet_con",
@@ -428,11 +477,11 @@ class TestNmcliEthernetConnection(NmcliConnectionTypeIPConfigurable):
 
     def test_add_connection_with_invalid_ipv6_address(self, mock):
         with pytest.raises(
-            expected_exception=CommandExecutionFailure,
-            match=".*Error: failed to modify ipv6.addresses: "
-            "invalid IP address: "
-            "Invalid IPv6 address "
-            "'2a02:ed0:52fe:ec00:dc3f:f939:a573'..*",
+                expected_exception=CommandExecutionFailure,
+                match=".*Error: failed to modify ipv6.addresses: "
+                      "invalid IP address: "
+                      "Invalid IPv6 address "
+                      "'2a02:ed0:52fe:ec00:dc3f:f939:a573'..*",
         ):
             mock.network.nmcli.add_ethernet_connection(
                 name="ethernet_con",
@@ -447,10 +496,10 @@ class TestNmcliEthernetConnection(NmcliConnectionTypeIPConfigurable):
 
     def test_add_connection_with_invalid_ipv4_gateway(self, mock):
         with pytest.raises(
-            expected_exception=CommandExecutionFailure,
-            match=".*Error: failed to modify ipv4.gateway: "
-            "invalid IP address: "
-            "Invalid IPv4 address '192.168.23.254.2'.*",
+                expected_exception=CommandExecutionFailure,
+                match=".*Error: failed to modify ipv4.gateway: "
+                      "invalid IP address: "
+                      "Invalid IPv4 address '192.168.23.254.2'.*",
         ):
             mock.network.nmcli.add_ethernet_connection(
                 name="ethernet_con",
@@ -465,10 +514,10 @@ class TestNmcliEthernetConnection(NmcliConnectionTypeIPConfigurable):
 
     def test_add_connection_with_invalid_ipv6_gateway(self, mock):
         with pytest.raises(
-            expected_exception=CommandExecutionFailure,
-            match=".*Error: failed to modify ipv6.gateway: "
-            "invalid IP address: "
-            "Invalid IPv6 address '2a02:ed0:52fe:ec00:'..*",
+                expected_exception=CommandExecutionFailure,
+                match=".*Error: failed to modify ipv6.gateway: "
+                      "invalid IP address: "
+                      "Invalid IPv6 address '2a02:ed0:52fe:ec00:'..*",
         ):
             mock.network.nmcli.add_ethernet_connection(
                 name="ethernet_con",
@@ -488,9 +537,9 @@ class TestNmcliEthernetConnection(NmcliConnectionTypeIPConfigurable):
 
     def test_add_ethernet_with_invalid_mac(self, mock):
         with pytest.raises(
-            expected_exception=CommandExecutionFailure,
-            match=".*Error: failed to modify 802-3-ethernet.mac-address: "
-            "'e8:6a:64:7d:d3' is not a valid Ethernet MAC..*",
+                expected_exception=CommandExecutionFailure,
+                match=".*Error: failed to modify 802-3-ethernet.mac-address: "
+                      "'e8:6a:64:7d:d3' is not a valid Ethernet MAC..*",
         ):
             mock.network.nmcli.add_ethernet_connection(
                 name="ethernet_con", ifname="enp8s0f0", mac="e8:6a:64:7d:d3"

@@ -161,20 +161,26 @@ class NMCLI(Service):
                     - "mac"
                     - "mtu"
         """
-        devices = []
-        connections_names = [
-            connection.get(ConnectionDetails.NAME)
-            for connection in self.get_all_connections()
+        device_names = self._exec_command(
+            command="nmcli -g {name} {obj} {operation}".format(
+                name=NmGeneralSettings.DEVICE,
+                obj=Objects.DEVICE,
+                operation=Operations.SHOW,
+            )
+        )
+        device_names = [
+            name for name in device_names.splitlines() if name != ""
         ]
 
-        for name in connections_names:
+        devices = []
+
+        for name in device_names:
             out = self._exec_command(
                 command=(
                     "nmcli -e no "
-                    "-g {name},{type},{mac},{mtu} "
+                    "-g {type},{mac},{mtu} "
                     "{obj} {operation} {device}"
                 ).format(
-                    name=NmGeneralSettings.DEVICE,
                     type=NmGeneralSettings.TYPE,
                     mac=NmGeneralSettings.MAC,
                     mtu=NmGeneralSettings.MTU,
@@ -186,36 +192,14 @@ class NMCLI(Service):
             properties = out.splitlines()
             devices.append(
                 {
-                    DeviceDetails.NAME: properties[0],
-                    DeviceDetails.TYPE: properties[1],
-                    DeviceDetails.MAC: properties[2],
-                    DeviceDetails.MTU: properties[3],
+                    DeviceDetails.NAME: name,
+                    DeviceDetails.TYPE: properties[0],
+                    DeviceDetails.MAC: properties[1],
+                    DeviceDetails.MTU: properties[2],
                 }
             )
 
         return devices
-
-    def get_device(self, name):
-        """
-        Gets a device's details.
-
-        Args:
-            name (str): device name.
-
-        Returns:
-            dict: device details. contains the following keys:
-                - "name"
-                - "type"
-                - "mac"
-                - "mtu"
-        """
-        devices = self.get_all_devices()
-        device = [
-            device
-            for device in devices
-            if device.get(DeviceDetails.NAME) == name
-        ]
-        return device[0] if device else {}
 
     def set_connection_state(self, connection, state):
         """

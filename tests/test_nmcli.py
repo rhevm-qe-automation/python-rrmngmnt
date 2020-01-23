@@ -266,6 +266,16 @@ class TestNmcliEthernetConnection(NmcliConnectionTypeIPConfigurable):
         ): (0, "", ""),
         (
             "nmcli connection add "
+            "type ethernet con-name ethernet_con ifname enp8s0f0 autoconnect "
+            "yes save yes"
+        ): (0, "", ""),
+        (
+            "nmcli connection add "
+            "type ethernet con-name ethernet_con ifname enp8s0f0 autoconnect "
+            "no save no"
+        ): (0, "", ""),
+        (
+            "nmcli connection add "
             "type ethernet con-name ethernet_con ifname enp8s0f0 save yes"
         ): (0, "", ""),
         (
@@ -370,6 +380,22 @@ class TestNmcliEthernetConnection(NmcliConnectionTypeIPConfigurable):
             name="ethernet_con", ifname="enp8s0f0", save=True
         )
 
+    def test_add_connection_with_autoconnect_and_save(self, mock):
+        mock.network.nmcli.add_ethernet_connection(
+            name="ethernet_con",
+            ifname="enp8s0f0",
+            auto_connect=True,
+            save=True,
+        )
+
+    def test_add_connection_with_no_autoconnect_and_no_save(self, mock):
+        mock.network.nmcli.add_ethernet_connection(
+            name="ethernet_con",
+            ifname="enp8s0f0",
+            auto_connect=False,
+            save=False,
+        )
+
     def test_add_connection_with_static_ips(self, mock):
         mock.network.nmcli.add_ethernet_connection(
             name="ethernet_con",
@@ -386,8 +412,8 @@ class TestNmcliEthernetConnection(NmcliConnectionTypeIPConfigurable):
         with pytest.raises(
             expected_exception=CommandExecutionFailure,
             match=".*Error: failed to modify ipv4.addresses: "
-                  "invalid IP address: "
-                  "Invalid IPv4 address '192.186.23.2.2'..*",
+            "invalid IP address: "
+            "Invalid IPv4 address '192.186.23.2.2'..*",
         ):
             mock.network.nmcli.add_ethernet_connection(
                 name="ethernet_con",
@@ -404,9 +430,9 @@ class TestNmcliEthernetConnection(NmcliConnectionTypeIPConfigurable):
         with pytest.raises(
             expected_exception=CommandExecutionFailure,
             match=".*Error: failed to modify ipv6.addresses: "
-                  "invalid IP address: "
-                  "Invalid IPv6 address "
-                  "'2a02:ed0:52fe:ec00:dc3f:f939:a573'..*",
+            "invalid IP address: "
+            "Invalid IPv6 address "
+            "'2a02:ed0:52fe:ec00:dc3f:f939:a573'..*",
         ):
             mock.network.nmcli.add_ethernet_connection(
                 name="ethernet_con",
@@ -423,8 +449,8 @@ class TestNmcliEthernetConnection(NmcliConnectionTypeIPConfigurable):
         with pytest.raises(
             expected_exception=CommandExecutionFailure,
             match=".*Error: failed to modify ipv4.gateway: "
-                  "invalid IP address: "
-                  "Invalid IPv4 address '192.168.23.254.2'.*",
+            "invalid IP address: "
+            "Invalid IPv4 address '192.168.23.254.2'.*",
         ):
             mock.network.nmcli.add_ethernet_connection(
                 name="ethernet_con",
@@ -441,8 +467,8 @@ class TestNmcliEthernetConnection(NmcliConnectionTypeIPConfigurable):
         with pytest.raises(
             expected_exception=CommandExecutionFailure,
             match=".*Error: failed to modify ipv6.gateway: "
-                  "invalid IP address: "
-                  "Invalid IPv6 address '2a02:ed0:52fe:ec00:'..*",
+            "invalid IP address: "
+            "Invalid IPv6 address '2a02:ed0:52fe:ec00:'..*",
         ):
             mock.network.nmcli.add_ethernet_connection(
                 name="ethernet_con",
@@ -464,7 +490,7 @@ class TestNmcliEthernetConnection(NmcliConnectionTypeIPConfigurable):
         with pytest.raises(
             expected_exception=CommandExecutionFailure,
             match=".*Error: failed to modify 802-3-ethernet.mac-address: "
-                  "'e8:6a:64:7d:d3' is not a valid Ethernet MAC..*",
+            "'e8:6a:64:7d:d3' is not a valid Ethernet MAC..*",
         ):
             mock.network.nmcli.add_ethernet_connection(
                 name="ethernet_con", ifname="enp8s0f0", mac="e8:6a:64:7d:d3"

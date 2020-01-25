@@ -74,10 +74,6 @@ class VlanOptions:
     ID = "id"
     MTU = "mtu"
 
-NMCLI_CONNECTION_DELETE = "nmcli connection delete {id}"
-
-NMCLI_CONNECTION_ADD = "nmcli connection add"
-
 
 class NMCLI(Service):
     """

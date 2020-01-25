@@ -197,7 +197,25 @@ class TestNmcliSanity(NmcliBase):
             "",
             "Error: unknown connection 'ovirtmgmtt'.",
         ),
+        "nmcli device modify em1 +ipv4.dns 8.8.4.4": (0, "", ""),
+        'nmcli device modify em1 -ipv6.addr abbe::cafe/56': (0, "", "")
     }
+
+    def test_modify_device_add_ipv4_dns(self, mock):
+        mock.network.nmcli.modify_device(
+            device="em1",
+            properties={
+                "+ipv4.dns": "8.8.4.4"
+            }
+        )
+
+    def test_modify_device_remove_ipv6_address(self, mock):
+        mock.network.nmcli.modify_device(
+            device="em1",
+            properties={
+                "-ipv6.addr": "abbe::cafe/56"
+            }
+        )
 
     def test_get_all_connections(self, mock):
         connections = mock.network.nmcli.get_all_connections()

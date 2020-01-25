@@ -96,7 +96,7 @@ class NMCLI(Service):
 
         Raises:
             CommandExecutionFailure: if the remote host returned a code
-            indicating a failure in execution.
+                indicating a failure in execution.
         """
         split = shlex.split(command)
 
@@ -127,7 +127,7 @@ class NMCLI(Service):
 
         Raises:
             CommandExecutionFailure: if the remote host returned a code
-            indicating a failure in execution.
+                indicating a failure in execution.
         """
         connections = []
 
@@ -160,6 +160,9 @@ class NMCLI(Service):
                     - "type"
                     - "mac"
                     - "mtu"
+        Raises:
+            CommandExecutionFailure: if the remote host returned a code
+                indicating a failure in execution.
         """
         device_names = self._exec_command(
             command="nmcli -g {name} {obj} {operation}".format(
@@ -212,7 +215,7 @@ class NMCLI(Service):
 
         Raises:
             CommandExecutionFailure: if the remote host returned a code
-            indicating a failure in execution.
+                indicating a failure in execution.
         """
         self._exec_command(
             command="nmcli {obj} {state} {connection}".format(
@@ -327,7 +330,7 @@ class NMCLI(Service):
 
         Raises:
             CommandExecutionFailure: if the remote host returned a code
-            indicating a failure in execution.
+                indicating a failure in execution.
 
         Notes:
             The parameters [ipv4_addr, ipv4_gw, ipv6_addr, ipv6_gw] are to be
@@ -381,7 +384,7 @@ class NMCLI(Service):
 
         Raises:
             CommandExecutionFailure: if the remote host returned a code
-            indicating a failure in execution.
+                indicating a failure in execution.
         """
         type_options = {SlaveOptions.MASTER: master}
 
@@ -436,7 +439,7 @@ class NMCLI(Service):
 
         Raises:
             CommandExecutionFailure: if the remote host returned a code
-            indicating a failure in execution.
+                indicating a failure in execution.
         """
         type_options = {VlanOptions.DEV: dev, VlanOptions.ID: vlan_id}
         if mtu:
@@ -495,7 +498,7 @@ class NMCLI(Service):
 
         Raises:
             CommandExecutionFailure: if the remote host returned a code
-            indicating a failure in execution.
+                indicating a failure in execution.
         """
         self._exec_command(
             command=self._nmcli_cmd_builder(
@@ -550,8 +553,8 @@ class NMCLI(Service):
             connection (str): name, UUID or path.
 
         Raises:
-            ConnectionDoesNotExistException: if a connection with the given
-                name does not exist.
+            CommandExecutionFailure: if the remote host returned a code
+                indicating a failure in execution.
         """
         self._exec_command(
             command=self._nmcli_cmd_builder(
@@ -593,7 +596,7 @@ class NMCLI(Service):
         ipv4_addr, ipv4_gw, ipv4_method, ipv6_addr, ipv6_gw, ipv6_method
     ):
         """
-        Extends a connection adding command with optional parameters.
+        Extends an nmcli command with IP options.
 
         Args:
             ipv4_addr (str): a static address.
@@ -607,8 +610,7 @@ class NMCLI(Service):
                 manual, shared.
 
         Returns:
-            str: an nmcli connection add command with the passed in optional
-                parameters.
+            str: a substring of the nmcli command formatted with IP options.
         """
         command = ""
 
@@ -635,7 +637,7 @@ class NMCLI(Service):
         con_type, con_name, ifname, auto_connect=None, save=None
     ):
         """
-        Generates a string containing common options for the nmcli tool.
+        Generates a string containing common options for the nmcli command.
 
         Args:
             con_type (str): the connection type.

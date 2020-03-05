@@ -395,6 +395,20 @@ class Network(Service):
         return mgmt_int
 
     @keep_session
+    def find_mgmt_connection(self):
+        """
+        Return the management connection name
+
+        Returns:
+            str: Connection name if found, "" if not
+        """
+        mng_interface = self.find_mgmt_interface()
+        for connection in self.nmcli.get_all_connections():
+            if connection.get("device") == mng_interface:
+                return connection.get("name")
+        return ""
+
+    @keep_session
     def list_bridges(self):
         """
         List of bridges on host

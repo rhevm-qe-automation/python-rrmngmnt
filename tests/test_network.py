@@ -203,6 +203,26 @@ class TestNetwork(object):
         "ping 1.2.3.4 -c 5 -s 10 -M do": (0, "something", ""),
         'ip address add 1.2.3.4/24 dev eth0': (0, "", ""),
         'ip address add 1.2.3.4/255.255.255.0 dev eth0': (0, "", ""),
+        "nmcli -t connection show": (
+            0,
+            "\n".join(
+                [
+                    "enp5s0f0:ba7aafc8-438e-4f8d-9f6e-3991fecebac0:bridge"
+                    ":enp5s0f0",
+                    "enp1s0f1:702b48ac-750f-4856-8124-c8c55d8e3dda:"
+                    "802-3-ethernet:",
+                    "enp2s0f0:d2ee2c05-b28f-4529-8f42-ea4dbb17f308:"
+                    "802-3-ethernet:",
+                    "enp2s0f1:98e5c49f-bd72-45b4-b377-bfb74b6665ca:"
+                    "802-3-ethernet:",
+                    "enp2s0f2:a7199332-f99d-4152-babd-79d37d53478c:"
+                    "802-3-ethernet:",
+                    "enp2s0f3:86dbb462-6404-4444-8f4b-b78d045f4c9d:"
+                    "802-3-ethernet:",
+                ]
+            ),
+            "",
+        ),
     }
     files = {
     }
@@ -249,6 +269,9 @@ class TestNetwork(object):
 
     def test_find_mgmt_interface(self):
         assert get_host().network.find_mgmt_interface() == 'enp5s0f0'
+
+    def test_find_mgmt_connection(self):
+        assert get_host().network.find_mgmt_connection() == "enp5s0f0"
 
     def test_all_interfaces(self):
         expected = ['enp4s0f0', 'enp4s0f1', 'enp5s0f0', 'enp5s0f']

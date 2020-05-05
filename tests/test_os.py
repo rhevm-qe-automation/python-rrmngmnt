@@ -110,8 +110,6 @@ class TestOperatingSystemNegative(object):
         ),
         'python -c "import platform;print(\',\'.join('
         'platform.linux_distribution()))"': (1, '', 'SyntaxError'),
-        'uname -r ; uname -v ; uname -m': (1, '', 'SyntaxError'),
-        'date +%Z\\ %z': (1, '', 'SyntaxError'),
     }
     files = {}
 
@@ -137,16 +135,6 @@ class TestOperatingSystemNegative(object):
     def test_distro(self):
         with pytest.raises(errors.CommandExecutionFailure) as ex_info:
             self.get_host().os.distribution
-        assert "SyntaxError" in str(ex_info.value)
-
-    def test_get_kernel_info(self):
-        with pytest.raises(errors.CommandExecutionFailure) as ex_info:
-            self.get_host().os.kernel_info
-        assert "SyntaxError" in str(ex_info.value)
-
-    def test_get_timezone(self):
-        with pytest.raises(errors.CommandExecutionFailure) as ex_info:
-            self.get_host().os.timezone
         assert "SyntaxError" in str(ex_info.value)
 
 

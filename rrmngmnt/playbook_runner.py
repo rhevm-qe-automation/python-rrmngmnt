@@ -107,7 +107,7 @@ class PlaybookRunner(Service):
     def run(
         self, playbook, extra_vars=None, vars_files=None, inventory=None,
         verbose_level=1, run_in_check_mode=False, ssh_common_args=None,
-        upload_playbook=True
+        upload_playbook=True, vault_password_file=None,
     ):
         """
         Run Ansible playbook on host
@@ -136,6 +136,8 @@ class PlaybookRunner(Service):
                 "-o UserKnownHostsFile=/dev/null"]
             upload_playbook (bool): If the playbook is going to be uploaded
                 from the local machine (True - Default) or not (False)
+            vault_password_file (str): Path to a vault password file. This is
+                required if any of the vars_files are vault-protected.
 
         Returns:
             tuple: tuple of (rc, out, err)
@@ -157,6 +159,13 @@ class PlaybookRunner(Service):
             if vars_files:
                 for f in vars_files:
                     self.cmd.append("-e@{}".format(self._upload_file(f)))
+
+            if vault_password_file:
+                self.cmd.append(
+                    "--vault-password-file={}".format(
+                        self._upload_file(vault_password_file)
+                    )
+                )
 
             self.cmd.append("-i")
             if inventory:

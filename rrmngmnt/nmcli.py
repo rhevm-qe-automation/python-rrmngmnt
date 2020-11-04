@@ -8,10 +8,6 @@ import shlex
 from rrmngmnt.errors import CommandExecutionFailure
 from rrmngmnt.service import Service
 
-ERROR_MSG_FORMAT = (
-    "command -> {command}\nRC -> {rc}\nOUT -> {out}\nERROR -> {err}"
-)
-
 
 class Objects:
     CONNECTION = "connection"
@@ -79,7 +75,6 @@ class NMCLI(Service):
     """
     This class implements network operations using nmcli.
     """
-
     def __init__(self, host):
         super(NMCLI, self).__init__(host)
         self._executor = host.executor()
@@ -226,6 +221,7 @@ class NMCLI(Service):
         ipv6_method=None,
         ipv6_addr=None,
         ipv6_gw=None,
+        **kwargs
     ):
         """
         Creates an ETHERNET connection.
@@ -252,11 +248,11 @@ class NMCLI(Service):
             CommandExecutionFailure: if the remote host returned a code
                 indicating a failure in execution.
         """
-        type_options = {}
         if mac:
-            type_options[EthernetOptions.MAC] = mac
+            kwargs[EthernetOptions.MAC] = mac
         if mtu:
-            type_options[EthernetOptions.MTU] = mtu
+            kwargs[EthernetOptions.MTU] = mtu
+        type_options = self._type_options_builder(**kwargs)
 
         self._exec_command(
             command=self._nmcli_cmd_builder(
@@ -291,6 +287,7 @@ class NMCLI(Service):
         ipv6_method=None,
         ipv6_addr=None,
         ipv6_gw=None,
+        **kwargs
     ):
         """
         Creates a bond connection.
@@ -325,11 +322,11 @@ class NMCLI(Service):
             The parameters [ipv4_addr, ipv4_gw, ipv6_addr, ipv6_gw] are to be
             used with a 'manual' IP method respectively.
         """
-        type_options = {}
         if mode:
-            type_options[BondOptions.MODE] = mode
+            kwargs[BondOptions.MODE] = mode
         if miimon:
-            type_options[BondOptions.MIIMON] = miimon
+            kwargs[BondOptions.MIIMON] = miimon
+        type_options = self._type_options_builder(**kwargs)
 
         self._exec_command(
             command=self._nmcli_cmd_builder(
@@ -358,6 +355,7 @@ class NMCLI(Service):
         master,
         auto_connect=None,
         save=None,
+        **kwargs
     ):
         """
         Creates a bond slave.
@@ -375,7 +373,8 @@ class NMCLI(Service):
             CommandExecutionFailure: if the remote host returned a code
                 indicating a failure in execution.
         """
-        type_options = {SlaveOptions.MASTER: master}
+        kwargs[SlaveOptions.MASTER] = master
+        type_options = self._type_options_builder(**kwargs)
 
         self._exec_command(
             command=self._nmcli_cmd_builder(
@@ -404,6 +403,7 @@ class NMCLI(Service):
         ipv6_method=None,
         ipv6_addr=None,
         ipv6_gw=None,
+        **kwargs
     ):
         """
         Creates a VLAN connection.
@@ -430,9 +430,11 @@ class NMCLI(Service):
             CommandExecutionFailure: if the remote host returned a code
                 indicating a failure in execution.
         """
-        type_options = {VlanOptions.DEV: dev, VlanOptions.ID: vlan_id}
         if mtu:
-            type_options[VlanOptions.MTU] = mtu
+            kwargs[VlanOptions.MTU] = mtu
+        kwargs[VlanOptions.DEV] = dev
+        kwargs[VlanOptions.ID] = vlan_id
+        type_options = self._type_options_builder(**kwargs)
 
         self._exec_command(
             command=self._nmcli_cmd_builder(
@@ -464,6 +466,7 @@ class NMCLI(Service):
         ipv6_method=None,
         ipv6_addr=None,
         ipv6_gw=None,
+        **kwargs
     ):
         """
         Creates a dummy connection.
@@ -488,6 +491,8 @@ class NMCLI(Service):
             CommandExecutionFailure: if the remote host returned a code
                 indicating a failure in execution.
         """
+        type_options = self._type_options_builder(**kwargs)
+
         self._exec_command(
             command=self._nmcli_cmd_builder(
                 object_type=Objects.CONNECTION,
@@ -503,6 +508,7 @@ class NMCLI(Service):
                 ipv6_method=ipv6_method,
                 ipv6_addr=ipv6_addr,
                 ipv6_gw=ipv6_gw,
+                type_options=type_options
             )
         )
 
@@ -653,6 +659,20 @@ class NMCLI(Service):
             common_options += f" save {_get_str_value(value=save)}"
 
         return common_options
+
+    @staticmethod
+    def _type_options_builder(**kwargs):
+        """
+        Builds nmcli command type options.
+
+        Args:
+            *args: positional arguments.
+            **kwargs: keyword arguments.
+
+        Returns:
+            dict: type specific options for an nmcli command.
+        """
+        return {option: val for option, val in kwargs.items()}
 
     def _nmcli_cmd_builder(
         self,

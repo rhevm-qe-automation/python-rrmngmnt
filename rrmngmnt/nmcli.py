@@ -406,7 +406,9 @@ class NMCLI(Service):
             CommandExecutionFailure: if the remote host returned a code
                 indicating a failure in execution.
         """
-        type_options = {SlaveOptions.MASTER: master}
+        type_options = {}
+        if master:
+            type_options = {SlaveOptions.MASTER: master}
 
         self._exec_command(
             command=self._nmcli_cmd_builder(

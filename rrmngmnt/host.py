@@ -210,7 +210,7 @@ class Host(Resource):
     def power_manager(self):
         return self.get_power_manager()
 
-    def executor(self, user=None, pkey=False):
+    def executor(self, user=None, pkey=False, sudo=False):
         """
         Gives you executor to allowing command execution
 
@@ -229,7 +229,7 @@ class Host(Resource):
             ef = copy.copy(ssh.RemoteExecutorFactory)
             ef.use_pkey = pkey
             return ef(self.ip, user)
-        return self.executor_factory.build(self, user)
+        return self.executor_factory.build(self, user, sudo=sudo)
 
     def run_command(
         self, command, input_=None, tcp_timeout=None, io_timeout=None,

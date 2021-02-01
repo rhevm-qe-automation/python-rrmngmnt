@@ -125,13 +125,19 @@ class BasePackageManager(object):
                 list2cmdline(['which', manager_]): rc,
             })
 
-    def get_host(self, ip='1.1.1.1'):
+    def get_host(self, ip='1.1.1.1', sudo=False):
         h = Host(ip)
         h.add_user(User('root', '11111'))
+        if sudo:
+            h.executor(sudo=sudo)
+
         return h
 
     def get_pm(self):
         return self.get_host().package_manager
+
+    def test_exist_with_sudo(self):
+        assert self.get_pm().exist(self.packages['installed_1'])
 
     def test_exist(self):
         assert self.get_pm().exist(self.packages['installed_1'])

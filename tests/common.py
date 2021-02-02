@@ -70,9 +70,6 @@ class FakeExecutor(Executor):
             return FakeExecutor.Command(cmd, self)
 
         def run_cmd(self, cmd, input_=None, timeout=None):
-            if self._executor.sudo:
-                cmd.insert(0, "sudo")
-
             cmd = self.command(cmd)
             return cmd.run(input_, timeout)
 

@@ -133,8 +133,8 @@ class BasePackageManager(object):
 
         return h
 
-    def get_pm(self):
-        return self.get_host().package_manager
+    def get_pm(self, sudo=False):
+        return self.get_host(sudo=sudo).package_manager
 
     def test_info(self):
         assert not self.get_pm().info(self.packages['installed_1'])
@@ -143,7 +143,7 @@ class BasePackageManager(object):
         assert not self.get_pm().info(self.packages['not_installed'])
 
     def test_exist_with_sudo(self):
-        assert self.get_pm().exist(self.packages['installed_1'])
+        assert self.get_pm(sudo=True).exist(self.packages['installed_1'])
 
     def test_exist(self):
         assert self.get_pm().exist(self.packages['installed_1'])

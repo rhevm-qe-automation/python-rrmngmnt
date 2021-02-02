@@ -122,6 +122,9 @@ class RemoteExecutor(Executor):
             return RemoteExecutor.Command(cmd, self)
 
         def run_cmd(self, cmd, input_=None, timeout=None):
+            if self._executor.sudo:
+                cmd.insert(0, "sudo")
+
             cmd = self.command(cmd)
             return cmd.run(input_, timeout)
 
@@ -242,9 +245,6 @@ class RemoteExecutor(Executor):
         Returns:
             tuple (int, str, str): Rc, out, err
         """
-        if self.sudo:
-            cmd.insert(0, "sudo")
-
         with self.session(tcp_timeout) as session:
             return session.run_cmd(cmd, input_, io_timeout)
 

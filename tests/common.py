@@ -70,6 +70,9 @@ class FakeExecutor(Executor):
             return FakeExecutor.Command(cmd, self)
 
         def run_cmd(self, cmd, input_=None, timeout=None):
+            if self._executor.sudo:
+                cmd.insert(0, "sudo")
+
             cmd = self.command(cmd)
             return cmd.run(input_, timeout)
 
@@ -117,6 +120,7 @@ class FakeExecutor(Executor):
         return FakeExecutor.Session(self, timeout)
 
     def run_cmd(self, cmd, input_=None, tcp_timeout=None, io_timeout=None):
+        cmd = list(cmd)
         with self.session(tcp_timeout) as session:
             return session.run_cmd(cmd, input_, io_timeout)
 
@@ -130,4 +134,5 @@ class FakeExecutorFactory(ExecutorFactory):
         fe = FakeExecutor(user, host.ip)
         fe.cmd_to_data = self.cmd_to_data.copy()
         fe.files_content = self.files_content
+        fe.sudo = sudo
         return fe

@@ -237,7 +237,7 @@ class Host(Resource):
 
     def run_command(
         self, command, input_=None, tcp_timeout=None, io_timeout=None,
-        user=None, pkey=False,
+        user=None, pkey=False, disabled_algorithms=None
     ):
         """
         Run command on host
@@ -247,6 +247,7 @@ class Host(Resource):
             input_ (str): input data
             tcp_timeout (float): tcp timeout
             `io_timeout (float): timeout for data operation (read/write)
+            disabled_algorithms (dict): disabled algorithms on ssh connect
 
         Returns:
             tuple: tuple of (rc, out, err)
@@ -254,7 +255,7 @@ class Host(Resource):
         self.logger.info("Executing command %s", ' '.join(command))
         rc, out, err = self.executor(user=user, pkey=pkey).run_cmd(
             command, input_=input_, tcp_timeout=tcp_timeout,
-            io_timeout=io_timeout
+            io_timeout=io_timeout, disabled_algorithms=disabled_algorithms
         )
         if rc:
             self.logger.error(

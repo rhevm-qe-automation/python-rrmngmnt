@@ -54,11 +54,12 @@ class RemoteExecutor(Executor):
         """
         Represents active ssh connection
         """
-        def __init__(self, executor, timeout=None):
+        def __init__(self, executor, timeout=None, disabled_algorithms=None):
             super(RemoteExecutor.Session, self).__init__(executor)
             if timeout is None:
                 timeout = RemoteExecutor.TCP_TIMEOUT
             self._timeout = timeout
+            self._disabled_algorithms = disabled_algorithms
             self._ssh = paramiko.SSHClient()
             self._ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             if isinstance(self._executor.user, UserWithPKey):
@@ -98,6 +99,7 @@ class RemoteExecutor(Executor):
                     timeout=self._timeout,
                     pkey=self.pkey,
                     port=self._executor.port,
+                    disabled_algorithms=self._disabled_algorithms
                 )
             except (socket.gaierror, socket.herror) as ex:
                 args = list(ex.args)
@@ -235,15 +237,16 @@ class RemoteExecutor(Executor):
                 "future. Please use user.UserWithPKey user instead."
             )
 
-    def session(self, timeout=None):
+    def session(self, timeout=None, disabled_algorithms=None):
         """
         Args:
             timeout (float): Tcp timeout
+            disabled_algorithms (dict): disabled algorithms on ssh connect
 
         Returns:
             instance of RemoteExecutor.Session: The session
         """
-        return RemoteExecutor.Session(self, timeout)
+        return RemoteExecutor.Session(self, timeout, disabled_algorithms)
 
     def run_cmd(
             self,
@@ -251,7 +254,8 @@ class RemoteExecutor(Executor):
             input_=None,
             tcp_timeout=None,
             io_timeout=None,
-            get_pty=False
+            get_pty=False,
+            disabled_algorithms=None
     ):
         """
         Args:
@@ -261,19 +265,21 @@ class RemoteExecutor(Executor):
             io_timeout (float): Timeout for data operation (read/write)
             get_pty (bool) : get pseudoterminal
                 (equivalent to passing -t arg to ssh)
+            disabled_algorithms (dict): disabled algorithms on ssh connect
 
         Returns:
             tuple (int, str, str): Rc, out, err
         """
-        with self.session(tcp_timeout) as session:
+        with self.session(tcp_timeout, disabled_algorithms) as session:
             return session.run_cmd(cmd, input_, io_timeout, get_pty=get_pty)
 
-    def is_connective(self, tcp_timeout=20.0):
+    def is_connective(self, tcp_timeout=20.0, disabled_algorithms=None):
         """
         Check if address is connective via ssh
 
         Args:
             tcp_timeout (float): Time to wait for response
+            disabled_algorithms (dict): disabled algorithms on ssh connect
 
         Returns:
             bool: True if address is connective, false otherwise
@@ -283,7 +289,11 @@ class RemoteExecutor(Executor):
                 "Check if address is connective via ssh in given timeout %s",
                 tcp_timeout
             )
-            self.run_cmd(['true'], tcp_timeout=tcp_timeout)
+            self.run_cmd(
+                ['true'],
+                tcp_timeout=tcp_timeout,
+                disabled_algorithms=disabled_algorithms
+            )
             return True
         except (socket.timeout, socket.error) as e:
             self.logger.debug("Socket error: %s", e)

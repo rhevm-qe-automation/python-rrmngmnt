@@ -43,7 +43,11 @@ class FakeExecutor(Executor):
     files_content = {}
 
     class Session(Executor.Session):
-        def __init__(self, executor, timeout=None, use_pkey=False, disabled_algorithms=None):
+        def __init__(self,
+                     executor,
+                     timeout=None,
+                     use_pkey=False,
+                     disabled_algorithms=None):
             super(FakeExecutor.Session, self).__init__(executor)
             self._timeout = timeout
 
@@ -116,7 +120,12 @@ class FakeExecutor(Executor):
     def session(self, timeout=None, disabled_algorithms=None):
         return FakeExecutor.Session(self, timeout, disabled_algorithms)
 
-    def run_cmd(self, cmd, input_=None, tcp_timeout=None, io_timeout=None , disabled_algorithms=None):
+    def run_cmd(self,
+                cmd,
+                input_=None,
+                tcp_timeout=None,
+                io_timeout=None,
+                disabled_algorithms=None):
         cmd = list(cmd)
         with self.session(tcp_timeout, disabled_algorithms) as session:
             return session.run_cmd(cmd, input_, io_timeout)

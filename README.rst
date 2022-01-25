@@ -34,6 +34,17 @@ Using SSH key for authentication
 
     h.executor(user).run_cmd(['echo', 'Use pkey for auth instead of password'])
 
+Using SSH key with disabled algorithms on paramiko SSHClient connect (Used when connecting to machines using old SSH)
+
+.. code:: python
+
+    from rrmngmnt import Host, UserWithPKey
+
+    h = Host("10.11.12.13")
+    user = UserWithPKey('user', '/path/to/pkey'))
+
+    h.executor(user).run_cmd(['echo', 'use of disabled algorithms'], disabled_keys = {'pubkeys':['rsa-sha2-512','rsa-sha2-256']})
+
 Features
 --------
 

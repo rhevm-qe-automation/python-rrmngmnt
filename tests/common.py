@@ -127,9 +127,10 @@ class FakeExecutorFactory(ExecutorFactory):
         self.cmd_to_data = cmd_to_data.copy()
         self.files_content = files_content
 
-    def build(self, host, user, sudo):
+    def build(self, host, user, sudo, disabled_algorithms):
         fe = FakeExecutor(user, host.ip)
         fe.cmd_to_data = self.cmd_to_data.copy()
         fe.files_content = self.files_content
         fe.sudo = sudo
+        fe.disabled_algorithms = disabled_algorithms
         return fe

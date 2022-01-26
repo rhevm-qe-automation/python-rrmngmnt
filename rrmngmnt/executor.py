@@ -101,5 +101,5 @@ class Executor(Resource):
 
 
 class ExecutorFactory(object):
-    def build(self, host, user):
+    def build(self, host, user, disabled_algorithms):
         raise NotImplementedError()

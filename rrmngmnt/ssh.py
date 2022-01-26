@@ -217,7 +217,13 @@ class RemoteExecutor(Executor):
                 self.err = normalize_string(err.read())
             return self.rc, self.out, self.err
 
-    def __init__(self, user, address, use_pkey=False, port=22, sudo=False, disabled_algorithms=None):
+    def __init__(self,
+                 user,
+                 address,
+                 use_pkey=False,
+                 port=22,
+                 sudo=False,
+                 disabled_algorithms=None):
         """
         Args:
             use_pkey (bool): Use ssh private key in the connection
@@ -339,6 +345,15 @@ class RemoteExecutorFactory(ExecutorFactory):
                 "future. Please use user.UserWithPKey user instead."
             )
 
-    def build(self, host, user, sudo=False, disabled_algorithms=None):
+    def build(self,
+              host,
+              user,
+              sudo=False,
+              disabled_algorithms=None):
         return RemoteExecutor(
-            user, host.ip, use_pkey=self.use_pkey, port=self.port, sudo=sudo, disabled_algorithms=None)
+            user,
+            host.ip,
+            use_pkey=self.use_pkey,
+            port=self.port,
+            sudo=sudo,
+            disabled_algorithms=disabled_algorithms)

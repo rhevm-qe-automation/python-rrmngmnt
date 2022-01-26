@@ -211,7 +211,7 @@ class Host(Resource):
     def power_manager(self):
         return self.get_power_manager()
 
-    def executor(self, user=None, pkey=False, sudo=False):
+    def executor(self, user=None, pkey=False, sudo=False, disabled_algorithms=None):
         """
         Gives you executor to allowing command execution
 
@@ -219,6 +219,7 @@ class Host(Resource):
             user (User): the executed commands will be executed under this
                 user. when it is None, the default executor user is used,
                 see set_executor_user method for more info.
+            disabled_algorithms (dict): disabled algorithms on ssh connect
         """
         if sudo:
             self.sudo = True
@@ -232,8 +233,8 @@ class Host(Resource):
             )
             ef = copy.copy(self.executor_factory)
             ef.use_pkey = pkey
-            return ef.build(self, user, self.sudo)
-        return self.executor_factory.build(self, user, sudo=self.sudo)
+            return ef.build(self, user, self.sudo, disabled_algorithms=disabled_algorithms)
+        return self.executor_factory.build(self, user, sudo=self.sudo, disabled_algorithms=disabled_algorithms)
 
     def run_command(
         self, command, input_=None, tcp_timeout=None, io_timeout=None,
@@ -253,9 +254,9 @@ class Host(Resource):
             tuple: tuple of (rc, out, err)
         """
         self.logger.info("Executing command %s", ' '.join(command))
-        rc, out, err = self.executor(user=user, pkey=pkey).run_cmd(
+        rc, out, err = self.executor(user=user, pkey=pkey, disabled_algorithms=disabled_algorithms).run_cmd(
             command, input_=input_, tcp_timeout=tcp_timeout,
-            io_timeout=io_timeout, disabled_algorithms=disabled_algorithms
+            io_timeout=io_timeout
         )
         if rc:
             self.logger.error(

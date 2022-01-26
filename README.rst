@@ -43,7 +43,7 @@ Using SSH key with disabled algorithms on paramiko SSHClient connect (Used when 
     h = Host("10.11.12.13")
     user = UserWithPKey('user', '/path/to/pkey'))
 
-    h.executor(user).run_cmd(['echo', 'use of disabled algorithms'], disabled_keys = {'pubkeys':['rsa-sha2-512','rsa-sha2-256']})
+    h.executor(user, disabled_keys = {'pubkeys':['rsa-sha2-512','rsa-sha2-256']}).run_cmd(['echo', 'use of disabled algorithms'])
 
 Features
 --------

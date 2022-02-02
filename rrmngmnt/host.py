@@ -74,7 +74,6 @@ class Host(Resource):
         self.os = OperatingSystem(self)
         self.add()  # adding host to inventory
         self.sudo = False
-        self.disabled_algorithms = None
 
     def __str__(self):
         return "Host(%s)" % self.ip

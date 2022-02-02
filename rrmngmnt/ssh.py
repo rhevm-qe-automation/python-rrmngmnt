@@ -54,12 +54,11 @@ class RemoteExecutor(Executor):
         """
         Represents active ssh connection
         """
-        def __init__(self, executor, timeout=None, disabled_algorithms=None):
+        def __init__(self, executor, timeout=None):
             super(RemoteExecutor.Session, self).__init__(executor)
             if timeout is None:
                 timeout = RemoteExecutor.TCP_TIMEOUT
             self._timeout = timeout
-            self._disabled_algorithms = disabled_algorithms
             self._ssh = paramiko.SSHClient()
             self._ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             if isinstance(self._executor.user, UserWithPKey):
@@ -99,7 +98,7 @@ class RemoteExecutor(Executor):
                     timeout=self._timeout,
                     pkey=self.pkey,
                     port=self._executor.port,
-                    disabled_algorithms=self._disabled_algorithms
+                    disabled_algorithms=self._executor.disabled_algorithms
                 )
             except (socket.gaierror, socket.herror) as ex:
                 args = list(ex.args)
@@ -252,7 +251,7 @@ class RemoteExecutor(Executor):
         Returns:
             instance of RemoteExecutor.Session: The session
         """
-        return RemoteExecutor.Session(self, timeout, self.disabled_algorithms)
+        return RemoteExecutor.Session(self, timeout)
 
     def run_cmd(
             self,
@@ -336,23 +335,21 @@ class RemoteExecutor(Executor):
 
 
 class RemoteExecutorFactory(ExecutorFactory):
-    def __init__(self, use_pkey=False, port=22):
+    def __init__(self, use_pkey=False, port=22, disabled_algorithms=None):
         self.use_pkey = use_pkey
         self.port = port
+        self.disabled_algorithms = disabled_algorithms
         if use_pkey:
             warnings.warn(
                 "Parameter 'use_pkey' is deprecated and will be removed in "
                 "future. Please use user.UserWithPKey user instead."
             )
 
-    def build(self,
-              host,
-              user,
-              sudo=False):
+    def build(self, host, user, sudo=False):
         return RemoteExecutor(
             user,
             host.ip,
             use_pkey=self.use_pkey,
             port=self.port,
             sudo=sudo,
-            disabled_algorithms=host.disabled_algorithms)
+            disabled_algorithms=self.disabled_algorithms)

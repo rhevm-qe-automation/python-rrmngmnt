@@ -41,9 +41,10 @@ Using SSH key with disabled algorithms on paramiko SSHClient connect (Used when 
     from rrmngmnt import Host, UserWithPKey
 
     h = Host("10.11.12.13")
+    h.disabled_algorithms= dict(pubkeys=['rsa-sha2-256', 'rsa-sha2-512'])
     user = UserWithPKey('user', '/path/to/pkey'))
 
-    h.executor(user, disabled_algorithms=dict(pubkeys=['rsa-sha2-256', 'rsa-sha2-512'])).run_cmd(['echo', 'use of disabled algorithms'])
+    h.executor(user).run_cmd(['echo', 'use of disabled algorithms'])
 
 Features
 --------

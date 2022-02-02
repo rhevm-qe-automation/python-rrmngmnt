@@ -348,12 +348,11 @@ class RemoteExecutorFactory(ExecutorFactory):
     def build(self,
               host,
               user,
-              sudo=False,
-              disabled_algorithms=None):
+              sudo=False):
         return RemoteExecutor(
             user,
             host.ip,
             use_pkey=self.use_pkey,
             port=self.port,
             sudo=sudo,
-            disabled_algorithms=disabled_algorithms)
+            disabled_algorithms=host.disabled_algorithms)

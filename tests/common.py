@@ -43,11 +43,7 @@ class FakeExecutor(Executor):
     files_content = {}
 
     class Session(Executor.Session):
-        def __init__(self,
-                     executor,
-                     timeout=None,
-                     use_pkey=False,
-                     disabled_algorithms=None):
+        def __init__(self, executor, timeout=None, use_pkey=False):
             super(FakeExecutor.Session, self).__init__(executor)
             self._timeout = timeout
 
@@ -118,10 +114,7 @@ class FakeExecutor(Executor):
         self.address = address
 
     def session(self, timeout=None):
-        return FakeExecutor.Session(
-            self,
-            timeout,
-            disabled_algorithms=self.disabled_algorithms)
+        return FakeExecutor.Session(self, timeout)
 
     def run_cmd(self, cmd, input_=None, tcp_timeout=None, io_timeout=None):
         cmd = list(cmd)
@@ -134,10 +127,9 @@ class FakeExecutorFactory(ExecutorFactory):
         self.cmd_to_data = cmd_to_data.copy()
         self.files_content = files_content
 
-    def build(self, host, user, sudo, disabled_algorithms):
+    def build(self, host, user, sudo):
         fe = FakeExecutor(user, host.ip)
         fe.cmd_to_data = self.cmd_to_data.copy()
         fe.files_content = self.files_content
         fe.sudo = sudo
-        fe.disabled_algorithms = disabled_algorithms
         return fe

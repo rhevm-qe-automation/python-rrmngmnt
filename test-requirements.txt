@@ -1,5 +1,0 @@
-pytest>=7.0.0
-pytest-cov
-pytest-docker
-docker-compose
-attrs

@@ -239,7 +239,7 @@ Install
 
 .. code:: sh
 
-    python setup.py devop
+    pip install python-rrmngmnt
 
 Test
 ----

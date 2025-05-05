@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-from rrmngmnt import Host, RootUser
-from .common import FakeExecutorFactory
+import pytest
 
+from rrmngmnt import Host, RootUser
+
+from .common import FakeExecutorFactory
 
 host_executor_factory = Host.executor_factory
 
@@ -12,12 +14,6 @@ def teardown_module():
 
 def fake_cmd_data(cmd_to_data, files=None):
     Host.executor_factory = FakeExecutorFactory(cmd_to_data, files)
-
-
-def get_host(ip='1.1.1.1'):
-    h = Host(ip)
-    h.users.append(RootUser('123456'))
-    return h
 
 
 class TestNetwork(object):
@@ -34,331 +30,303 @@ class TestNetwork(object):
             '["BROADCAST","MULTICAST"],'
             '"mtu":1500,"master":"virbr0","state":"disabled",'
             '"priority":32,"cost":100}]',
-            ""
+            "",
         ),
-        'ip route': (
+        "ip route": (
             0,
-            '\n'.join(
-                [
-
-                    'default via 10.11.12.254 dev ovirtmgmt ',
-                    '10.11.12.0/24 dev ovirtmgmt  proto kernel  scope link  '
-                    'src 10.11.12.35 ',
-                    '10.11.12.0/24 dev enp4s0f1  proto kernel  scope link  '
-                    'src 10.11.12.81 ',
-                    '10.11.12.0/24 dev enp5s0f0  proto kernel  scope link  '
-                    'src 10.11.12.83 ',
-                    '169.254.0.0/16 dev enp5s0f0  scope link  metric 1002 ',
-                    '169.254.0.0/16 dev enp4s0f1  scope link  metric 1005 ',
-                    '169.254.0.0/16 dev ovirtmgmt  scope link  metric 1007',
-                ]
-            ),
-            '',
+            "\n".join([
+                "default via 10.11.12.254 dev ovirtmgmt ",
+                "10.11.12.0/24 dev ovirtmgmt  proto kernel  scope link  src 10.11.12.35 ",
+                "10.11.12.0/24 dev enp4s0f1  proto kernel  scope link  src 10.11.12.81 ",
+                "10.11.12.0/24 dev enp5s0f0  proto kernel  scope link  src 10.11.12.83 ",
+                "169.254.0.0/16 dev enp5s0f0  scope link  metric 1002 ",
+                "169.254.0.0/16 dev enp4s0f1  scope link  metric 1005 ",
+                "169.254.0.0/16 dev ovirtmgmt  scope link  metric 1007",
+            ]),
+            "",
         ),
-        'ip -6 route': (
+        "ip -6 route": (
             0,
-            '\n'.join(
-                [
-                    'unreachable ::/96 dev lo  metric 1024  error -101',
-                    'unreachable 2002:a9fe::/32 lo metric 1024  error -101',
-                    'unreachable 2002:ac10::/28 lo metric 1024  error -101',
-                    'fe80:52:0::3fe dev eth0  proto static  metric 100 ',
-                    'default via fe80::0:3fe dev eth0 proto static metric 100',
-                ]
-            ),
-            '',
+            "\n".join([
+                "unreachable ::/96 dev lo  metric 1024  error -101",
+                "unreachable 2002:a9fe::/32 lo metric 1024  error -101",
+                "unreachable 2002:ac10::/28 lo metric 1024  error -101",
+                "fe80:52:0::3fe dev eth0  proto static  metric 100 ",
+                "default via fe80::0:3fe dev eth0 proto static metric 100",
+            ]),
+            "",
         ),
-        'ip addr': (
+        "ip addr": (
             0,
-            ''.join(
-                [
-                    '1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue '
-                    'state UNKNOWN \n',
-                    '    link/loopback 00:00:00:00:00:00 brd '
-                    '00:00:00:00:00:00\n',
-                    '    inet 127.0.0.1/8 scope host lo\n',
-                    '       valid_lft forever preferred_lft forever\n',
-                    '    inet6 ::1/128 scope host \n',
-                    '       valid_lft forever preferred_lft forever\n',
-                    '2: enp5s0f0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 '
-                    'qdisc mq state UP qlen 1000\n',
-                    '    link/ether 44:1e:a1:73:3c:98 brd ff:ff:ff:ff:ff:ff\n',
-                    '    inet 10.11.12.83/24 brd 10.11.12.255 scope global '
-                    'enp5s0f0\n',
-                    '       valid_lft forever preferred_lft forever\n',
-                    '    inet6 fe80::461e:a1ff:fe73:3c98/64 scope link \n',
-                    '       valid_lft forever preferred_lft forever\n',
-                    '3: enp4s0f0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 '
-                    'qdisc mq master ovirtmgmt state UP qlen 1000\n',
-                    '    link/ether 00:9c:02:b0:bf:a0 brd ff:ff:ff:ff:ff:ff\n',
-                    '    inet6 fe80::29c:2ff:feb0:bfa0/64 scope link \n',
-                    '       valid_lft forever preferred_lft forever\n',
-                    '4: enp5s0f1: <BROADCAST,MULTICAST> mtu 1500 qdisc noop '
-                    'state DOWN qlen 1000\n',
-                    '    link/ether 44:1e:a1:73:3c:99 brd ff:ff:ff:ff:ff:ff\n',
-                    '5: enp4s0f1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 '
-                    'qdisc mq state UP qlen 1000\n',
-                    '    link/ether 00:9c:02:b0:bf:a4 brd ff:ff:ff:ff:ff:ff\n',
-                    '    inet 10.11.12.81/24 brd 10.11.12.255 scope global '
-                    'enp4s0f1\n',
-                    '       valid_lft forever preferred_lft forever\n',
-                    '    inet6 fe80::29c:2ff:feb0:bfa4/64 scope link \n',
-                    '       valid_lft forever preferred_lft forever\n',
-                    '6: bond0: <BROADCAST,MULTICAST,MASTER> mtu 1500 qdisc '
-                    'noop state DOWN \n',
-                    '    link/ether 16:17:fe:8e:0f:46 brd ff:ff:ff:ff:ff:ff\n',
-                    '7: ovirtmgmt: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 '
-                    'qdisc noqueue state UP \n',
-                    '    link/ether 00:9c:02:b0:bf:a0 brd ff:ff:ff:ff:ff:ff\n',
-                    '    inet 10.11.12.35/24 brd 10.11.12.255 scope global '
-                    'dynamic ovirtmgmt\n',
-                    '       valid_lft 41596sec preferred_lft 41596sec\n',
-                    '    inet6 fe80::29c:2ff:feb0:bfa0/64 scope link \n',
-                    '       valid_lft forever preferred_lft forever\n',
-                    '8: ;vdsmdummy;: <BROADCAST,MULTICAST> mtu 1500 qdisc '
-                    'noop state DOWN \n',
-                    '    link/ether 82:0c:ab:0f:ed:8b brd ff:ff:ff:ff:ff:ff\n',
-                ]
-            ),
-            '',
+            "".join([
+                "1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN \n",
+                "    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00\n",
+                "    inet 127.0.0.1/8 scope host lo\n",
+                "       valid_lft forever preferred_lft forever\n",
+                "    inet6 ::1/128 scope host \n",
+                "       valid_lft forever preferred_lft forever\n",
+                "2: enp5s0f0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP qlen 1000\n",
+                "    link/ether 44:1e:a1:73:3c:98 brd ff:ff:ff:ff:ff:ff\n",
+                "    inet 10.11.12.83/24 brd 10.11.12.255 scope global enp5s0f0\n",
+                "       valid_lft forever preferred_lft forever\n",
+                "    inet6 fe80::461e:a1ff:fe73:3c98/64 scope link \n",
+                "       valid_lft forever preferred_lft forever\n",
+                "3: enp4s0f0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 "
+                "qdisc mq master ovirtmgmt state UP qlen 1000\n",
+                "    link/ether 00:9c:02:b0:bf:a0 brd ff:ff:ff:ff:ff:ff\n",
+                "    inet6 fe80::29c:2ff:feb0:bfa0/64 scope link \n",
+                "       valid_lft forever preferred_lft forever\n",
+                "4: enp5s0f1: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN qlen 1000\n",
+                "    link/ether 44:1e:a1:73:3c:99 brd ff:ff:ff:ff:ff:ff\n",
+                "5: enp4s0f1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP qlen 1000\n",
+                "    link/ether 00:9c:02:b0:bf:a4 brd ff:ff:ff:ff:ff:ff\n",
+                "    inet 10.11.12.81/24 brd 10.11.12.255 scope global enp4s0f1\n",
+                "       valid_lft forever preferred_lft forever\n",
+                "    inet6 fe80::29c:2ff:feb0:bfa4/64 scope link \n",
+                "       valid_lft forever preferred_lft forever\n",
+                "6: bond0: <BROADCAST,MULTICAST,MASTER> mtu 1500 qdisc noop state DOWN \n",
+                "    link/ether 16:17:fe:8e:0f:46 brd ff:ff:ff:ff:ff:ff\n",
+                "7: ovirtmgmt: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP \n",
+                "    link/ether 00:9c:02:b0:bf:a0 brd ff:ff:ff:ff:ff:ff\n",
+                "    inet 10.11.12.35/24 brd 10.11.12.255 scope global dynamic ovirtmgmt\n",
+                "       valid_lft 41596sec preferred_lft 41596sec\n",
+                "    inet6 fe80::29c:2ff:feb0:bfa0/64 scope link \n",
+                "       valid_lft forever preferred_lft forever\n",
+                "8: ;vdsmdummy;: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN \n",
+                "    link/ether 82:0c:ab:0f:ed:8b brd ff:ff:ff:ff:ff:ff\n",
+            ]),
+            "",
         ),
-        'ip addr show to 10.11.12.83': (
+        "ip addr show to 10.11.12.83": (
             0,
-            '\n'.join(
-                [
-                    '2: enp5s0f0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 '
-                    'qdisc mq state UP qlen 1000',
-                    '    inet 10.11.12.83/24 brd 10.11.12.255 scope global '
-                    'enp5s0f0',
-                    '           valid_lft forever preferred_lft forever',
-                ]
-            ),
-            ''
+            "\n".join([
+                "2: enp5s0f0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP qlen 1000",
+                "    inet 10.11.12.83/24 brd 10.11.12.255 scope global enp5s0f0",
+                "           valid_lft forever preferred_lft forever",
+            ]),
+            "",
         ),
-        'ip addr show eth0': (
+        "ip addr show eth0": (
             0,
-            '\n'.join(
-                [
-                    '2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu ...',
-                    'link/ether 00:1a:4a:01:3f:1c brd ff:ff:ff:ff:ff:ff',
-                    'inet 10.11.12.84/22 brd 10.11.12.255 scope global',
-                    'valid_lft 20343sec preferred_lft 20343sec',
-                    'inet6 2620:52:0::fe01:3f1c/64 scope global dynamic',
-                    'valid_lft 2591620sec preferred_lft 604420sec',
-                    'inet6 fe80::4aff:fe01:3f1c/64 scope link ',
-                    'valid_lft forever preferred_lft forever',
-                ]
-            ),
-            ''
+            "\n".join([
+                "2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu ...",
+                "link/ether 00:1a:4a:01:3f:1c brd ff:ff:ff:ff:ff:ff",
+                "inet 10.11.12.84/22 brd 10.11.12.255 scope global",
+                "valid_lft 20343sec preferred_lft 20343sec",
+                "inet6 2620:52:0::fe01:3f1c/64 scope global dynamic",
+                "valid_lft 2591620sec preferred_lft 604420sec",
+                "inet6 fe80::4aff:fe01:3f1c/64 scope link ",
+                "valid_lft forever preferred_lft forever",
+            ]),
+            "",
         ),
-        'ip -6 addr show eth0': (
+        "ip -6 addr show eth0": (
             0,
-            '\n'.join(
-                [
-                    '2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu ...',
-                    'link/ether 00:1a:4a:01:3f:1c brd ff:ff:ff:ff:ff:ff',
-                    'inet6 2620:52:0::fe01:3f1c/64 scope global dynamic',
-                    'valid_lft 2591620sec preferred_lft 604420sec',
-                    'inet6 fe80::4aff:fe01:3f1c/64 scope link ',
-                    'valid_lft forever preferred_lft forever',
-                ]
-            ),
-            ''
+            "\n".join([
+                "2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu ...",
+                "link/ether 00:1a:4a:01:3f:1c brd ff:ff:ff:ff:ff:ff",
+                "inet6 2620:52:0::fe01:3f1c/64 scope global dynamic",
+                "valid_lft 2591620sec preferred_lft 604420sec",
+                "inet6 fe80::4aff:fe01:3f1c/64 scope link ",
+                "valid_lft forever preferred_lft forever",
+            ]),
+            "",
         ),
-        'brctl show | sed -e "/^bridge name/ d" '
-        '-e \'s/^\\s\\s*\\(\\S\\S*\\)$/CONT:\\1/I\'': (
+        "brctl show | sed -e \"/^bridge name/ d\" -e 's/^\\s\\s*\\(\\S\\S*\\)$/CONT:\\1/I'": (
             0,
-            '\n'.join(
-                [
-                    ';vdsmdummy;     8000.000000000000   no      ',
-                    'ovirtmgmt       8000.009c02b0bfa0   no      enp4s0f0',
-                ]
-            ),
-            '',
+            "\n".join([
+                ";vdsmdummy;     8000.000000000000   no      ",
+                "ovirtmgmt       8000.009c02b0bfa0   no      enp4s0f0",
+            ]),
+            "",
         ),
-        'brctl addbr br1': (0, '', ''),
-        'brctl addif br1 net1': (0, '', ''),
-        'ls -la /sys/class/net | grep \'dummy_\\|pci\' | grep -o \'[^/]*$\'': (
+        "brctl addbr br1": (0, "", ""),
+        "brctl addif br1 net1": (0, "", ""),
+        "ls -la /sys/class/net | grep 'dummy_\\|pci' | grep -o '[^/]*$'": (
             0,
-            '\n'.join(
-                [
-                    'enp4s0f0',
-                    'enp4s0f1',
-                    'enp5s0f0',
-                    'enp5s0f',
-                ]
-            ),
-            '',
+            "\n".join([
+                "enp4s0f0",
+                "enp4s0f1",
+                "enp5s0f0",
+                "enp5s0f",
+            ]),
+            "",
         ),
-        "ethtool -P enp5s0f0": (
-            0,
-            "Permanent address: 44:1e:a1:73:3c:98",
-            ''
-        ),
-        'ip link set interface up': True,
-        'ip link set interface down': True,
+        "ethtool -P enp5s0f0": (0, "Permanent address: 44:1e:a1:73:3c:98", ""),
+        "ip link set interface up": True,
+        "ip link set interface down": True,
         "ethtool -i eth0": (0, "driver: e1000", ""),
         "cat /sys/class/net/eth0/speed": (0, "1000", ""),
         "cat /sys/class/net/eth0/operstate": (0, "up", ""),
         "ping 1.2.3.4 -c 5 -s 10 -M do": (0, "something", ""),
-        'ip address add 1.2.3.4/24 dev eth0': (0, "", ""),
-        'ip address add 1.2.3.4/255.255.255.0 dev eth0': (0, "", ""),
+        "ip address add 1.2.3.4/24 dev eth0": (0, "", ""),
+        "ip address add 1.2.3.4/255.255.255.0 dev eth0": (0, "", ""),
     }
-    files = {
-    }
+    files = {}
+
+    @pytest.fixture(scope="class")
+    def host(self):
+        h = Host("1.1.1.1")
+        h.users.append(RootUser("123456"))
+        return h
 
     @classmethod
     def setup_class(cls):
         fake_cmd_data(cls.data, cls.files)
 
-    def test_get_info(self):
-        info = get_host().network.get_info()
+    def test_get_info(self, host):
+        info = host.network.get_info()
         expected_info = {
-            'bridge': 'N/A',
-            'ip': '10.11.12.83',
-            'gateway': '10.11.12.254',
-            'interface': 'enp5s0f0',
-            'prefix': '24'
+            "bridge": "N/A",
+            "ip": "10.11.12.83",
+            "gateway": "10.11.12.254",
+            "interface": "enp5s0f0",
+            "prefix": "24",
         }
         assert info == expected_info
 
-    def test_find_default_gw(self):
-        dgw = get_host().network.find_default_gw()
-        assert dgw == '10.11.12.254'
+    def test_find_default_gw(self, host):
+        dgw = host.network.find_default_gw()
+        assert dgw == "10.11.12.254"
 
-    def test_list_bridges(self):
-        bridges = get_host().network.list_bridges()
+    def test_list_bridges(self, host):
+        bridges = host.network.list_bridges()
         expected = [
             {
-                'id': '8000.000000000000',
-                'interfaces': [],
-                'name': ';vdsmdummy;',
-                'stp': 'no',
+                "id": "8000.000000000000",
+                "interfaces": [],
+                "name": ";vdsmdummy;",
+                "stp": "no",
             },
             {
-                'id': '8000.009c02b0bfa0',
-                'interfaces': ['enp4s0f0'],
-                'name': 'ovirtmgmt',
-                'stp': 'no',
+                "id": "8000.009c02b0bfa0",
+                "interfaces": ["enp4s0f0"],
+                "name": "ovirtmgmt",
+                "stp": "no",
             },
         ]
         assert bridges == expected
 
-    def test_add_bridge(self):
-        assert get_host().network.add_bridge("br1", "net1")
+    def test_add_bridge(self, host):
+        assert host.network.add_bridge("br1", "net1")
 
-    def test_find_mgmt_interface(self):
-        assert get_host().network.find_mgmt_interface() == 'enp5s0f0'
+    def test_find_mgmt_interface(self, host):
+        assert host.network.find_mgmt_interface() == "enp5s0f0"
 
-    def test_all_interfaces(self):
-        expected = ['enp4s0f0', 'enp4s0f1', 'enp5s0f0', 'enp5s0f']
-        assert get_host().network.all_interfaces() == expected
+    def test_all_interfaces(self, host):
+        expected = ["enp4s0f0", "enp4s0f1", "enp5s0f0", "enp5s0f"]
+        assert host.network.all_interfaces() == expected
 
-    def test_get_mac_address_by_ip(self):
+    def test_get_mac_address_by_ip(self, host):
         expected = "44:1e:a1:73:3c:98"
-        assert get_host().network.get_mac_by_ip("10.11.12.83") == expected
+        assert host.network.get_mac_by_ip("10.11.12.83") == expected
 
-    def test_find_ip_by_int(self):
-        assert get_host().network.find_ip_by_int("eth0") == "10.11.12.84"
+    def test_find_ip_by_int(self, host):
+        assert host.network.find_ip_by_int("eth0") == "10.11.12.84"
 
-    def test_find_ipv6_by_int(self):
+    def test_find_ipv6_by_int(self, host):
         expected = "2620:52:0::fe01:3f1c"
-        assert get_host().network.find_ipv6_by_int("eth0") == expected
+        assert host.network.find_ipv6_by_int("eth0") == expected
 
-    def test_find_default_gwv6(self):
-        assert get_host().network.find_default_gwv6() == "fe80::0:3fe"
+    def test_find_default_gwv6(self, host):
+        assert host.network.find_default_gwv6() == "fe80::0:3fe"
 
-    def if_up(self):
-        assert get_host().network.if_up("interface")
+    def if_up(self, host):
+        assert host.network.if_up("interface")
 
-    def if_down(self):
-        assert get_host().network.if_down("interface")
+    def if_down(self, host):
+        assert host.network.if_down("interface")
 
-    def test_get_interface_speed(self):
-        assert get_host().network.get_interface_speed("eth0") == "1000"
+    def test_get_interface_speed(self, host):
+        assert host.network.get_interface_speed("eth0") == "1000"
 
-    def test_get_interface_status(self):
-        assert get_host().network.get_interface_status("eth0") == "up"
+    def test_get_interface_status(self, host):
+        assert host.network.get_interface_status("eth0") == "up"
 
-    def test_send_icmp(self):
-        assert get_host().network.send_icmp('1.2.3.4', size="10")
+    def test_send_icmp(self, host):
+        assert host.network.send_icmp("1.2.3.4", size="10")
 
-    def test_add_ip_with_bitmask(self):
-        assert get_host().network.add_ip(nic="eth0", ip="1.2.3.4", mask="24")
+    def test_add_ip_with_bitmask(self, host):
+        assert host.network.add_ip(nic="eth0", ip="1.2.3.4", mask="24")
 
-    def test_add_ip_with_subnet_mask(self):
-        assert get_host().network.add_ip(
-            nic="eth0", ip="1.2.3.4", mask="255.255.255.0"
-        )
+    def test_add_ip_with_subnet_mask(self, host):
+        assert host.network.add_ip(nic="eth0", ip="1.2.3.4", mask="255.255.255.0")
 
-    def test_get_bridges(self):
-        assert (
-            get_host().network.get_bridges() ==
-            [
-                {
-                    "ifindex": 2,
-                    "ifname": "enp1s0f0",
-                    "flags": ["BROADCAST", "MULTICAST", "UP", "LOWER_UP"],
-                    "mtu": 1500,
-                    "master": "ovirtmgmt",
-                    "state": "forwarding",
-                    "priority": 32,
-                    "cost": 100
-                },
-                {
-                    "ifindex": 9,
-                    "ifname": "virbr0-nic",
-                    "flags": ["BROADCAST", "MULTICAST"],
-                    "mtu": 1500,
-                    "master": "virbr0",
-                    "state": "disabled",
-                    "priority": 32,
-                    "cost": 100
-                }
-            ]
-        )
+    def test_get_bridges(self, host):
+        assert host.network.get_bridges() == [
+            {
+                "ifindex": 2,
+                "ifname": "enp1s0f0",
+                "flags": ["BROADCAST", "MULTICAST", "UP", "LOWER_UP"],
+                "mtu": 1500,
+                "master": "ovirtmgmt",
+                "state": "forwarding",
+                "priority": 32,
+                "cost": 100,
+            },
+            {
+                "ifindex": 9,
+                "ifname": "virbr0-nic",
+                "flags": ["BROADCAST", "MULTICAST"],
+                "mtu": 1500,
+                "master": "virbr0",
+                "state": "disabled",
+                "priority": 32,
+                "cost": 100,
+            },
+        ]
 
 
 class TestHostNameCtl(object):
-
     data = {
-        'which hostnamectl': (0, '/usr/bin/hostnamectl', ''),
-        'hostnamectl set-hostname something': (0, '', ''),
+        "which hostnamectl": (0, "/usr/bin/hostnamectl", ""),
+        "hostnamectl set-hostname something": (0, "", ""),
         'hostnamectl status | grep hostname | tr -d " " | cut -d: -f2': (
-            0, 'local', '',
+            0,
+            "local",
+            "",
         ),
     }
-    files = {
-    }
+    files = {}
+
+    @pytest.fixture(scope="class")
+    def host(self):
+        h = Host("1.1.1.1")
+        h.users.append(RootUser("123456"))
+        return h
 
     @classmethod
     def setup_class(cls):
         fake_cmd_data(cls.data, cls.files)
 
-    def test_get(self):
-        assert get_host().network.hostname == "local"
+    def test_get(self, host):
+        assert host.network.hostname == "local"
 
-    def test_set(self):
-        get_host().network.hostname = "something"
+    def test_set(self, host):
+        host.network.hostname = "something"
 
 
 class TestHostNameEtc(object):
-
     data = {
-        'which hostnamectl': (1, '', ''),
-        'hostname -f': (0, 'local', ''),
-        'hostname something ; sed -i -e /^HOSTNAME/d /etc/sysconfig/network '
-        '&& echo HOSTNAME=something >> /etc/sysconfig/network': (0, '', ''),
+        "which hostnamectl": (1, "", ""),
+        "hostname -f": (0, "local", ""),
+        "hostname something ; sed -i -e /^HOSTNAME/d /etc/sysconfig/network "
+        "&& echo HOSTNAME=something >> /etc/sysconfig/network": (0, "", ""),
     }
-    files = {
-    }
+    files = {}
+
+    @pytest.fixture(scope="class")
+    def host(self):
+        h = Host("1.1.1.1")
+        h.users.append(RootUser("123456"))
+        return h
 
     @classmethod
     def setup_class(cls):
         fake_cmd_data(cls.data, cls.files)
 
-    def test_get(self):
-        assert get_host().network.hostname == "local"
+    def test_get(self, host):
+        assert host.network.hostname == "local"
 
-    def test_set(self):
-        get_host().network.hostname = "something"
+    def test_set(self, host):
+        host.network.hostname = "something"

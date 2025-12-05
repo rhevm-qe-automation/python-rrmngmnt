@@ -117,12 +117,11 @@ class PlaybookRunnerBase(object):
         ): success,
     }
 
-    @classmethod
     @pytest.fixture(scope='class')
-    def fake_host(cls):
+    def fake_host(self):
         fh = Host('1.1.1.1')
         fh.add_user(User('root', '11111'))
-        fh.executor_factory = FakeExecutorFactory(cls.data, cls.files)
+        fh.executor_factory = FakeExecutorFactory(self.data, self.files)
         return fh
 
     @pytest.fixture()

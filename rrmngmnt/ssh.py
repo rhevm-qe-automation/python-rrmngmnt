@@ -100,6 +100,7 @@ class RemoteExecutor(Executor):
                     port=self._executor.port,
                     disabled_algorithms=self._executor.disabled_algorithms,
                     sock=self._executor.sock,
+                    banner_timeout=self._executor.banner_timeout,
                 )
             except (socket.gaierror, socket.herror) as ex:
                 args = list(ex.args)
@@ -250,6 +251,7 @@ class RemoteExecutor(Executor):
                  sudo=False,
                  disabled_algorithms=None,
                  sock=None,
+                 banner_timeout=None,
                  ):
         """
         Args:
@@ -259,6 +261,8 @@ class RemoteExecutor(Executor):
             port (int): Port to connect
             sudo (bool): Use sudo to execute command.
             sock (ProxyCommand): Proxy command to use.
+            banner_timeout (float): An optional timeout (in seconds) to wait
+                for the SSH banner to be presented.
         """
         super(RemoteExecutor, self).__init__(user)
         self.address = address
@@ -267,6 +271,7 @@ class RemoteExecutor(Executor):
         self.sudo = sudo
         self.disabled_algorithms = disabled_algorithms
         self.sock = sock
+        self.banner_timeout = banner_timeout
         if use_pkey:
             warnings.warn(
                 "Parameter 'use_pkey' is deprecated and will be removed in "
@@ -366,12 +371,14 @@ class RemoteExecutor(Executor):
 
 class RemoteExecutorFactory(ExecutorFactory):
     def __init__(
-        self, use_pkey=False, port=22, disabled_algorithms=None, sock=None
+        self, use_pkey=False, port=22, disabled_algorithms=None, sock=None,
+        banner_timeout=None,
     ):
         self.use_pkey = use_pkey
         self.port = port
         self.disabled_algorithms = disabled_algorithms
         self.sock = sock
+        self.banner_timeout = banner_timeout
         if use_pkey:
             warnings.warn(
                 "Parameter 'use_pkey' is deprecated and will be removed in "
@@ -387,4 +394,5 @@ class RemoteExecutorFactory(ExecutorFactory):
             sudo=sudo,
             disabled_algorithms=self.disabled_algorithms,
             sock=paramiko.ProxyCommand(self.sock) if self.sock else self.sock,
+            banner_timeout=self.banner_timeout,
         )

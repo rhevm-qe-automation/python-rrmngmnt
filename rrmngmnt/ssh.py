@@ -114,6 +114,16 @@ class RemoteExecutor(Executor):
 
         def close(self):
             self._ssh.close()
+            sock = self._executor.sock
+            if isinstance(sock, paramiko.ProxyCommand):
+                try:
+                    sock.close()
+                except OSError:
+                    pass
+                try:
+                    sock.process.wait(timeout=5)
+                except Exception:
+                    pass
 
         def _update_timeout_exception(self, ex, timeout=None):
             if getattr(ex, '_updated', False):

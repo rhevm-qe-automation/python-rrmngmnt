@@ -32,7 +32,11 @@ class Executor(Resource):
             return self._executor.logger
 
         def __enter__(self):
-            self.open()
+            try:
+                self.open()
+            except Exception:
+                self.close()
+                raise
             return self
 
         def __exit__(self, type_, value, tb):

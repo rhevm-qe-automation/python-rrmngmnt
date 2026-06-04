@@ -165,7 +165,7 @@ class Network(Service):
         if self._hnh is None:
             # NOTE: this strategy can be changed, but right now there are
             # no other Handlers
-            rc, out, err = self._m.runCmd(['which', 'hostnamectl'])
+            rc, out, err = self._m.runCmd(['command', '-v', 'hostnamectl'])
             if not rc:
                 self._hnh = HostnameCtlHandler(self._m)
             else:

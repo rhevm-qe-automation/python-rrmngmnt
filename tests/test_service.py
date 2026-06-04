@@ -87,7 +87,7 @@ class TestSystemd(TestSystemService):
 
     factory = Systemd
     data = {
-        'which systemctl': (0, '/usr/bin/systemctl', ''),
+        'command -v systemctl': (0, '/usr/bin/systemctl', ''),
         'systemctl list-unit-files | grep -o ^[^.][^.]*.service '
         '| cut -d. -f1 | sort | uniq': (
             0,
@@ -126,7 +126,7 @@ class TestSysVinit(TestSystemService):
     __test__ = True
     factory = SysVinit
     data = {
-        'which service': (0, '/usr/sbin/service', ''),
+        'command -v service': (0, '/usr/sbin/service', ''),
         '[ -e /etc/init.d/s-enabled ]': (0, '', ''),
         '[ -e /etc/init.d/s-disabled ]': (0, '', ''),
         '[ -e /etc/init.d/s-running ]': (0, '', ''),
@@ -158,7 +158,7 @@ class TestInitCtl(TestSystemService):
     __test__ = True
     factory = InitCtl
     data = {
-        'which initctl': (0, '/sbin/initctl', ''),
+        'command -v initctl': (0, '/sbin/initctl', ''),
         'initctl list | cut -d " " -f1 | sort | uniq': (
             0,
             '\n'.join(

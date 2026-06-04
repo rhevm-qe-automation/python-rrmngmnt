@@ -19,7 +19,7 @@ def fake_cmd_data(cmd_to_data, files=None):
 
 class TestFirewall(object):
     data = {
-        "which systemctl": (0, "/usr/bin/systemctl", ""),
+        "command -v systemctl": (0, "/usr/bin/systemctl", ""),
         "systemctl list-unit-files | grep -o ^[^.][^.]*.service | cut -d. -f1 | sort | uniq": (
             0,
             "\n".join([

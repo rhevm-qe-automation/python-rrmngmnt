@@ -279,7 +279,7 @@ class TestNetwork(object):
 
 class TestHostNameCtl(object):
     data = {
-        "which hostnamectl": (0, "/usr/bin/hostnamectl", ""),
+        "command -v hostnamectl": (0, "/usr/bin/hostnamectl", ""),
         "hostnamectl set-hostname something": (0, "", ""),
         'hostnamectl status | grep hostname | tr -d " " | cut -d: -f2': (
             0,
@@ -308,7 +308,7 @@ class TestHostNameCtl(object):
 
 class TestHostNameEtc(object):
     data = {
-        "which hostnamectl": (1, "", ""),
+        "command -v hostnamectl": (1, "", ""),
         "hostname -f": (0, "local", ""),
         "hostname something ; sed -i -e /^HOSTNAME/d /etc/sysconfig/network "
         "&& echo HOSTNAME=something >> /etc/sysconfig/network": (0, "", ""),

@@ -9,7 +9,7 @@ def get_host(hostname='test-host'):
 
 def test_executor_with_proxy_command():
     data = {
-        'which systemctl': (0, '/usr/bin/systemctl', ''),
+        'command -v systemctl': (0, '/usr/bin/systemctl', ''),
     }
     host = get_host()
     sock = 'my proxy command --stdio=true test-host 22'
@@ -19,4 +19,4 @@ def test_executor_with_proxy_command():
         cmd_to_data=data, files_content=None
     )
     host.executor_factory.sock = sock
-    host.executor().run_cmd(['which', 'systemctl'])
+    host.executor().run_cmd(['command', '-v', 'systemctl'])

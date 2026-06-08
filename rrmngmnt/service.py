@@ -88,7 +88,7 @@ class SystemService(Service):
         """
         executor = self.host.executor()
         rc, _, _ = executor.run_cmd(
-            ['which', self.cmd],
+            ['command', '-v', self.cmd],
             io_timeout=self.timeout,
         )
         if rc:

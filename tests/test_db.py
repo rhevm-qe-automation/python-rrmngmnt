@@ -19,7 +19,7 @@ def fake_cmd_data(cmd_to_data, files=None):
 
 class TestDb(object):
     data = {
-        "which systemctl": (0, "", ""),
+        "command -v systemctl": (0, "", ""),
         "systemctl list-unit-files | grep -o ^[^.][^.]*.service | cut -d. -f1 | sort | uniq": (
             0,
             "postgresql\n",

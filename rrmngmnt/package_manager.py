@@ -21,7 +21,7 @@ class PackageManager(Service):
             raise NotImplementedError("Name of binary file is not available.")
         rc, _, _ = h.executor().run_cmd(
             [
-                'which', cls.binary,
+                'command', '-v', cls.binary,
             ]
         )
         return not rc

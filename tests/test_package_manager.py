@@ -137,7 +137,7 @@ class BasePackageManager(object):
             if manager_ == cls.manager:
                 rc = cls.rc0
 
-            for val in (["which"], ["sudo", "which"]):
+            for val in (["command", "-v"], ["sudo", "command", "-v"]):
                 cls.data.update({
                     list2cmdline(val + [manager_]): rc,
                 })
